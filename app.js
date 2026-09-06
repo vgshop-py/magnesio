@@ -1,18 +1,1965 @@
-(function(){"use strict";var d=window.PRODUCT_CONFIG,y=window.COMBOS,K=window.SHIPPING_RATES,ie=window.DELIVERY_ZONES||{},De=window.CARRIERS,Ie=window.CITIES_BY_DEPARTMENT,G=window.CONTENIDO||{},Oe=window.DEPARTMENTS,n=function(e,t){return(t||document).querySelector(e)},v=function(e,t){return Array.prototype.slice.call((t||document).querySelectorAll(e))},s={combo:y.filter(function(e){return e.featured})[0]||y[0],department:"",city:"",carrier:"",prepayAccepted:!1,submitting:!1,lastOrder:null,checkoutOpen:!1};function f(e){return"Gs. "+String(Math.round(e)).replace(/\B(?=(\d{3})+(?!\d))/g,".")}function O(e){return String(e||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}function l(e){return String(e==null?"":e).replace(/[&<>"']/g,function(t){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[t]})}function x(e){var t=n("#toast");t.textContent=e,t.classList.add("show"),clearTimeout(x._t),x._t=setTimeout(function(){t.classList.remove("show")},3200)}var U="vg_"+(d.origin||"landing"),_=new URLSearchParams(window.location.search),g={utm_source:_.get("utm_source")||"",utm_medium:_.get("utm_medium")||"",utm_campaign:_.get("utm_campaign")||"",utm_content:_.get("utm_content")||"",utm_term:_.get("utm_term")||"",fbclid:_.get("fbclid")||"",gclid:_.get("gclid")||""};try{var Re=JSON.parse(sessionStorage.getItem(U+"_utm")||"{}"),qe=Object.keys(g).some(function(e){return g[e]});qe?sessionStorage.setItem(U+"_utm",JSON.stringify(g)):Object.keys(g).forEach(function(e){g[e]=g[e]||Re[e]||""})}catch(e){}var He=["PageView","ViewContent","AddToCart","CustomizeProduct","InitiateCheckout","Purchase","Lead","Contact","Search","AddPaymentInfo"];function je(e){return e+"."+Date.now().toString(36)+"."+Math.random().toString(36).slice(2,8)}function C(e,t,a){a=a||{};try{if(window.dataLayer&&window.dataLayer.push(Object.assign({event:e},a)),typeof window.gtag=="function"&&e&&window.gtag("event",e,a),typeof window.fbq=="function"&&t){var i=a.num_items||s.combo.qty,r={content_name:d.name,content_category:d.category,content_ids:[d.sku],content_type:"product",contents:[{id:d.sku,quantity:i,item_price:s.combo.price/s.combo.qty}],currency:d.currency,num_items:i};typeof a.value=="number"&&(r.value=a.value),a.transaction_id&&(r.order_id=a.transaction_id),a.combo&&(r.content_variant=a.combo),window.fbq(He.indexOf(t)>=0?"track":"trackCustom",t,r,{eventID:a.event_id||je(t)})}}catch(o){console.warn("[track]",o)}}function N(e){return[{item_id:d.sku,item_name:d.name,item_brand:d.brand,item_category:d.category,item_variant:e.label,price:e.price,quantity:e.qty}]}function re(e){for(var t=O(e),a=0;a<K.length;a++)if(O(K[a].city)===t)return K[a];return null}function E(e){return O(e).replace(/\b(departamento|depto|department|distrito|capital)\b/g," ").replace(/[^a-z0-9ñ]+/g," ").replace(/\s+/g," ").trim()}function z(e,t,a,i){var r=ie.ASUNCION_CENTRAL||{},o=E(a),p=E(i),m=(r.cities||[]).map(E),b=(r.departments||[]).map(E),k=!!o&&m.indexOf(o)!==-1;!k&&p&&(k=b.indexOf(p)!==-1);var w=k?"ASUNCION_CENTRAL":o||p?"INTERIOR":"SIN_DETERMINAR",D=ie[w]||{},F=o?re(a):null,I=w==="ASUNCION_CENTRAL"||!!F&&F.prepay!==!0;return{code:w,tipoEntrega:I?"DELIVERY":D.tipoEntrega||"SIN_DETERMINAR",formaPago:I?"CONTRA_ENTREGA":D.formaPago||"A_CONFIRMAR",polygon:D.polygon||null,lat:e==null?null:e,lng:t==null?null:t}}function Fe(e){var t=new Date(e||new Date);return t.setHours(12,0,0,0),t.setDate(t.getDate()+(t.getDay()===6?2:1)),t}function oe(e){var t=new Intl.DateTimeFormat("es-PY",{weekday:"long",day:"numeric",month:"long"}).format(Fe(e));return t.charAt(0).toUpperCase()+t.slice(1)}function Ge(e){var t=new Date(e||new Date);return t.setHours(12,0,0,0),t.setDate(t.getDate()+4),t}function ce(){var e=Ge(),t=n("#priceDeadlineDay"),a=n("#priceDeadlineMonth"),i=n("#priceDeadline"),r=n("#checkoutDeliveryDate");t&&(t.textContent=String(e.getDate())),a&&(a.textContent="de "+new Intl.DateTimeFormat("es-PY",{month:"long"}).format(e)),i&&(i.dateTime=e.getFullYear()+"-"+String(e.getMonth()+1).padStart(2,"0")+"-"+String(e.getDate()).padStart(2,"0")),r&&(r.textContent="Entrega prevista: "+oe())}function R(){var e=s.city?re(s.city):null,t=!!e,a=typeof c!="undefined"&&c.point?c.point:{},i=z(a.lat,a.lng,s.city,s.department),r=i.tipoEntrega!=="DELIVERY",o=t?e.cost:0,p=oe();return{covered:t,zone:i.code,carrierNeeded:r,prepay:r,realCost:o,cost:d.freeShipping?0:o,eta:p,type:r?"Transportadora":"Delivery a domicilio",payment:r?"Pago anticipado":"Pago contra entrega"}}function T(){var e=R();return{product:s.combo.price,shipping:e.cost,total:s.combo.price+e.cost,delivery:e}}function Ue(e){var t=T(),a="Hola, quiero comprar "+d.shortName+". Me interesa el combo de "+s.combo.label+" por "+f(t.total)+".";return a+=" Mi ciudad es "+(s.city||"________")+".",e&&(a+=" "+e),"https://wa.me/"+d.whatsapp+"?text="+encodeURIComponent(a)}function se(){var e=Ue();["#waHero","#waFloat","#waFinal","#waFooter"].forEach(function(t){var a=n(t);a&&(a.href=e)})}function ze(){var e=G.barraSuperior||[],t=n("#announceTrack");if(t){var a=e.map(function(i){return'<span class="announce-item">'+l(i)+"</span>"}).join("");t.innerHTML=a+a}}function Be(){var e=d.paymentInfo;e&&(v("[data-pay]").forEach(function(t){var a=e[t.dataset.pay];a&&(t.textContent=a)}),v("[data-copy-alias]").forEach(function(t){t.addEventListener("click",function(){var a=String(e.alias||""),i=function(){t.textContent="¡Copiado!",t.classList.add("done"),x("Copiamos "+a+" al portapapeles"),setTimeout(function(){t.textContent="Copiar",t.classList.remove("done")},2500)};navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(a).then(i).catch(function(){de(a,i)}):de(a,i)})}))}function de(e,t){try{var a=document.createElement("textarea");a.value=e,a.setAttribute("readonly",""),a.style.position="fixed",a.style.opacity="0",document.body.appendChild(a),a.select(),document.execCommand("copy"),document.body.removeChild(a),t()}catch(i){x("Copiá este dato a mano: "+e)}}function Ve(){n("#trustModal").hidden=!1,document.body.classList.add("no-scroll"),C("view_promotion","",{promotion_name:"procedencia_y_respaldo"})}function le(){n("#trustModal").hidden=!0,s.checkoutOpen||document.body.classList.remove("no-scroll")}var Ye="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",We="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",ue={lat:-25.2637,lng:-57.5759},c={loaded:!1,loading:null,map:null,marker:null,point:null,location:{direccionDetectada:"",barrio:"",city:"",department:"",postcode:"",accuracy:null,origin:"",zone:"SIN_DETERMINAR",tipoEntrega:"SIN_DETERMINAR",formaPago:"A_CONFIRMAR"},geocodeCache:new Map,reverseCache:new Map,nominatimQueue:Promise.resolve(),lastNominatimAt:0,reverseSequence:0,addressTimer:null,lastGeocodedAddress:""};function B(e,t){return"https://www.google.com/maps?q="+e.toFixed(6)+","+t.toFixed(6)}function $e(e){return new Promise(function(t){setTimeout(t,e)})}function pe(e){return c.nominatimQueue=c.nominatimQueue.catch(function(){return null}).then(function(){var t=Math.max(0,1100-(Date.now()-c.lastNominatimAt));return $e(t)}).then(function(){return c.lastNominatimAt=Date.now(),fetch(e,{headers:{Accept:"application/json","Accept-Language":"es"}})}).then(function(t){if(!t.ok)throw new Error("Geocoding HTTP "+t.status);return t.json()}),c.nominatimQueue}function me(e){var t=e&&e.address?e.address:{};return{direccionDetectada:String(e&&e.display_name||"").slice(0,500),barrio:t.neighbourhood||t.suburb||t.quarter||t.city_district||"",city:t.city||t.town||t.village||t.municipality||t.county||"",department:t.state||"",postcode:t.postcode||"",country:t.country||"",road:t.road||"",houseNumber:t.house_number||""}}function Je(e){var t=E(e);if(!t||t.length<6)return Promise.resolve(null);if(c.geocodeCache.has(t))return Promise.resolve(c.geocodeCache.get(t));var a="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=py&addressdetails=1&accept-language=es&q="+encodeURIComponent(e);return pe(a).then(function(i){var r=i&&i.length?i[0]:null,o=r?{lat:parseFloat(r.lat),lng:parseFloat(r.lon),details:me(r)}:null;return c.geocodeCache.set(t,o),o})}function Ze(e,t){var a=Number(e).toFixed(5)+","+Number(t).toFixed(5);if(c.reverseCache.has(a))return Promise.resolve(c.reverseCache.get(a));var i="https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&accept-language=es&zoom=18&lat="+encodeURIComponent(e)+"&lon="+encodeURIComponent(t);return pe(i).then(function(r){var o=me(r||{});return c.reverseCache.set(a,o),o})}function fe(e,t){var a=E(t);if(!a)return"";var i=Array.prototype.slice.call(e.options||[]),r=i.filter(function(p){return E(p.value)===a})[0];if(r)return r.value;var o=i.filter(function(p){var m=E(p.value);return m&&(m.indexOf(a)!==-1||a.indexOf(m)!==-1)})[0];return o?o.value:""}function ve(e,t){if(E(t)==="asuncion")return"Asunción";var a=n("#f-departamento"),i=fe(a,e);if(i)return i;var r=E(e);return r==="central"?"Central":""}function Ke(e){if(e){var t=ve(e.department,e.city);if(t&&(s.department=t,n("#f-departamento").value=t,ke(t),L("departamento"),M("departamento")),e.city&&s.department){var a=n("#f-ciudad"),i=fe(a,e.city),r=n('.field[data-field="ciudadOtra"]');i?(a.value=i,r.hidden=!0,n("#f-ciudad-otra").value="",s.city=i):(a.value="__otra",r.hidden=!1,n("#f-ciudad-otra").value=e.city,s.city=e.city),L("ciudad"),M("ciudad")}e.barrio&&!n("#f-barrio").value.trim()&&(n("#f-barrio").value=e.barrio,L("barrio"),M("barrio")),P()}}function V(e,t){var a=n("#locationCard");if(a){if(a.hidden=!1,a.classList.toggle("warning",!!t),a.dataset.origin=t?"":e.origin||"",a.dataset.zone=t?"SIN_DETERMINAR":e.zone||"SIN_DETERMINAR",a.dataset.accuracy=t||e.accuracy==null?"":String(e.accuracy),t){a.innerHTML="<strong>⚠️ No pudimos ubicar esta dirección exactamente</strong><span>Podés mover el pin o usar tu ubicación actual. Igualmente podés continuar con tu pedido.</span>";return}var i=ve(e.department,e.city)||e.department,r=[e.city||s.city,i||s.department].filter(Boolean).join(", ")||"Punto confirmado en el mapa",o=e.zone==="ASUNCION_CENTRAL"?"Asunción y Central":e.zone==="INTERIOR"?"Interior":"A confirmar",p=e.tipoEntrega==="DELIVERY"?"Delivery":e.tipoEntrega==="TRANSPORTADORA"?"Envío por transportadora":"Entrega a confirmar",m=e.formaPago==="CONTRA_ENTREGA"?"Pago al recibir":e.formaPago==="PAGO_PREVIO"?"Pago previo al envío":"Forma de pago a confirmar";a.innerHTML='<strong>✅ Ubicación confirmada</strong><span><i class="lc-icon">📍</i>'+l(r)+'</span><span><i class="lc-icon">🚚</i>Zona de entrega: '+l(o)+" · "+l(p)+'</span><span><i class="lc-icon">💵</i>'+l(m)+"</span>"}}function Q(e,t){c.map&&(c.marker?c.marker.setLatLng([e,t]):(c.marker=window.L.marker([e,t],{draggable:!0,autoPan:!0}).addTo(c.map),c.marker.on("dragend",function(){var a=c.marker.getLatLng();q(a.lat,a.lng,"PIN_MANUAL",{recenter:!1})})))}function q(e,t,a,i){if(i=i||{},e=Number(e),t=Number(t),!isFinite(e)||!isFinite(t)||Math.abs(e)>90||Math.abs(t)>180)return Promise.resolve(null);c.point={lat:e,lng:t},c.location.origin=a||"PIN_MANUAL",i.accuracy!=null?c.location.accuracy=Math.round(i.accuracy):a!=="GPS"&&(c.location.accuracy=null),Q(e,t),i.recenter!==!1&&c.map&&c.map.setView([e,t],i.zoom||(a==="GPS"?17:16)),n("#f-ubicacion").value=B(e,t),n("#mapStatus").textContent="✓ Ubicación marcada correctamente",H("¿No quedó exactamente en tu casa? Mové el pin hasta tu domicilio.","ok"),a&&C("share_location","",{method:a.toLowerCase()});var r=++c.reverseSequence;return Ze(e,t).then(function(o){if(r!==c.reverseSequence)return null;Object.keys(o).forEach(function(m){c.location[m]=o[m]});var p=z(e,t,o.city,o.department);return c.location.zone=p.code,c.location.tipoEntrega=p.tipoEntrega,c.location.formaPago=p.formaPago,Ke(o),V(c.location,!1),c.location}).catch(function(){if(r!==c.reverseSequence)return null;var o=z(e,t,s.city,s.department);return c.location.zone=o.code,c.location.tipoEntrega=o.tipoEntrega,c.location.formaPago=o.formaPago,V(c.location,!1),c.location})}function Qe(){return c.loaded?Promise.resolve():(c.loading||(c.loading=new Promise(function(e,t){var a=document.createElement("link");a.rel="stylesheet",a.href=Ye,document.head.appendChild(a);var i=document.createElement("script");i.src=We,i.async=!0,i.onload=function(){c.loaded=!0,e()},i.onerror=function(){c.loading=null,t(new Error("leaflet"))},document.head.appendChild(i)})),c.loading)}function he(e,t,a){return q(e,t,"PIN_MANUAL",{recenter:a!==!1})}function Xe(){var e=window.L,t=c.point||ue;c.map=e.map("mapCanvas",{zoomControl:!0,attributionControl:!0}).setView([t.lat,t.lng],c.point?16:12),e.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(c.map),c.map.on("click",function(a){q(a.latlng.lat,a.latlng.lng,"PIN_MANUAL",{recenter:!1})}),c.point&&Q(t.lat,t.lng),n("#mapLoading").hidden=!0}function ge(e){var t=String(e||"").match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);if(!t)return null;var a=parseFloat(t[1]),i=parseFloat(t[2]);return isNaN(a)||isNaN(i)||Math.abs(a)>90||Math.abs(i)>180?null:{lat:a,lng:i}}function X(){var e=ge(n("#f-ubicacion").value);if(e&&(c.point=e),c.map){n("#mapLoading").hidden=!0,setTimeout(function(){c.map.invalidateSize(),c.point&&(Q(c.point.lat,c.point.lng),c.map.setView([c.point.lat,c.point.lng],16))},60);return}n("#mapLoading").hidden=!1,Qe().then(function(){setTimeout(Xe,40)}).catch(function(){n("#mapLoading").innerHTML="No pudimos cargar el mapa. Revisá tu conexión e intentá nuevamente."})}function be(){n("#mapModal").hidden=!0,s.checkoutOpen||document.body.classList.remove("no-scroll")}function ye(){var e=n("#mapSearch").value.trim(),t=n("#mapSearchMsg");if(e.length<3){t.hidden=!1,t.className="map-search-msg bad",t.textContent="Escribí al menos 3 letras para buscar.";return}var a=n("#btnSearch");a.disabled=!0,a.textContent="Buscando…",t.hidden=!1,t.className="map-search-msg",t.textContent="Buscando “"+e+"”…";var i="https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=py&q="+encodeURIComponent(e);fetch(i,{headers:{Accept:"application/json"}}).then(function(r){return r.json()}).then(function(r){if(a.disabled=!1,a.textContent="Buscar",!r||!r.length){t.className="map-search-msg bad",t.textContent="No encontramos ese lugar. Probá con otra referencia o marcalo tocando el mapa.";return}var o=r[0];t.className="map-search-msg",t.textContent=o.display_name.slice(0,90),he(parseFloat(o.lat),parseFloat(o.lon),!0)}).catch(function(){a.disabled=!1,a.textContent="Buscar",t.className="map-search-msg bad",t.textContent="No pudimos buscar ahora. Marcá tu ubicación tocando el mapa."})}function et(){var e=n("#f-direccion"),t=n("#addressLookup"),a=e.value.trim();if(!(a.length<6||a===c.lastGeocodedAddress)){if(c.location.origin==="GPS"){t.className="address-lookup ok",t.textContent="✓ Conservamos la ubicación GPS, que es más precisa.";return}c.location.origin==="DIRECCION"&&Le(),c.lastGeocodedAddress=a,t.className="address-lookup searching",t.textContent="Buscando la dirección en el mapa…",Je(a).then(function(i){if(c.location.origin!=="GPS"){if(!i){t.className="address-lookup bad",t.textContent="No pudimos ubicarla exactamente. Podés usar el GPS o mover el pin.",V({},!0);return}t.className="address-lookup ok",t.textContent="✓ Dirección encontrada. Podés ajustar el pin si hace falta.",q(i.lat,i.lng,"DIRECCION",{recenter:!0,zoom:17})}}).catch(function(){t.className="address-lookup bad",t.textContent="No pudimos buscar ahora. Podés usar el GPS o marcar el mapa.",V({},!0)})}}function Ce(){clearTimeout(c.addressTimer),c.addressTimer=setTimeout(et,850)}function ee(e,t,a){if(!navigator.geolocation){a("Tu navegador no permite compartir la ubicación.");return}var i=e.innerHTML;e.disabled=!0,e.innerHTML='<span aria-hidden="true">🎯</span> Buscando tu ubicación…',navigator.geolocation.getCurrentPosition(function(r){e.disabled=!1,e.innerHTML=i,t(r.coords.latitude,r.coords.longitude,r.coords.accuracy)},function(r){e.disabled=!1,e.innerHTML=i;var o="No pudimos acceder a tu ubicación. Podés escribir tu dirección o marcarla manualmente en el mapa.";r.code===1?o="No diste permiso para usar tu ubicación. Podés escribir tu dirección o marcarla manualmente.":r.code===2?o="Tu ubicación no está disponible en este momento. Podés escribir tu dirección o mover el pin.":r.code===3&&(o="La búsqueda de tu ubicación tardó demasiado. Intentá otra vez o escribí tu dirección."),a(o)},{enableHighAccuracy:!0,timeout:12e3,maximumAge:6e4})}function H(e,t){var a=n("#geoHint");a.textContent=e,a.classList.remove("ok","bad"),t&&a.classList.add(t)}function Ee(e,t){n("#f-ubicacion").value=e;var a=n("#mapStatus");a&&(a.textContent="✓ Ubicación marcada correctamente"),H("¡Listo! Con tu ubicación el repartidor te encuentra más rápido.","ok"),t&&C("share_location","",{method:t})}function Le(){n("#f-ubicacion").value="",c.map&&c.marker&&c.map.removeLayer(c.marker),c.marker=null,c.point=null,c.reverseSequence+=1,c.location={direccionDetectada:"",barrio:"",city:"",department:"",postcode:"",accuracy:null,origin:"",zone:"SIN_DETERMINAR",tipoEntrega:"SIN_DETERMINAR",formaPago:"A_CONFIRMAR"},n("#mapStatus")&&(n("#mapStatus").textContent="Tocá el mapa para marcar tu ubicación"),H("¿No quedó exactamente en tu casa? Mové el pin hasta tu domicilio."),n("#locationCard")&&(n("#locationCard").hidden=!0)}function _t(){n("#btnPickMap")&&(n("#btnPickMap").addEventListener("click",X),v("[data-close-map]").forEach(function(e){e.addEventListener("click",be)}),n("#btnClearMap").addEventListener("click",Le),n("#btnSearch").addEventListener("click",ye),n("#mapSearch").addEventListener("keydown",function(e){e.key==="Enter"&&(e.preventDefault(),ye())}),n("#btnGeo").addEventListener("click",function(){var e=this;ee(e,function(t,a){c.point={lat:t,lng:a},Ee(B(t,a),"geolocation"),X()},function(t){H(t+" Podés tocar “Marcar en el mapa”.","bad")})}),n("#btnGeoMap").addEventListener("click",function(){var e=this,t=n("#mapSearchMsg");ee(e,function(a,i){he(a,i,!0),t.hidden=!1,t.className="map-search-msg",t.textContent="Listo, marcamos tu ubicación actual. Ajustá el pin si hace falta."},function(a){t.hidden=!1,t.className="map-search-msg bad",t.textContent=a})}),n("#btnConfirmMap").addEventListener("click",function(){var e=c.point||ue;Ee(B(e.lat,e.lng),"map_picker"),be(),x("Ubicación guardada 📍")}),n("#f-ubicacion").addEventListener("input",function(){var e=this.value.trim();if(!e){n("#mapResult").hidden=!0;return}n("#btnOpenMaps").href=/^https?:\/\//i.test(e)?e:"https://www.google.com/maps";var t=ge(e);t&&(c.point=t),n("#mapResultText").textContent=e.replace("https://www.google.com/maps?q=",""),n("#mapResult").hidden=!1}))}function tt(){if(!(!n("#mapCanvas")||!n("#btnGeo"))){n("#btnGeo").addEventListener("click",function(){var t=this;ee(t,function(a,i,r){q(a,i,"GPS",{recenter:!0,zoom:17,accuracy:r});var o=n("#addressLookup");o.className="address-lookup ok",o.textContent="✓ Usamos tu ubicación GPS exacta."},function(a){H(a,"bad")})});var e=n("#f-direccion");e.addEventListener("input",function(){if(clearTimeout(c.addressTimer),this.value.trim()!==c.lastGeocodedAddress){var t=n("#addressLookup");t.className="address-lookup",t.textContent=this.value.trim().length>=6?"Al terminar de editar, intentaremos ubicarla en el mapa.":""}}),e.addEventListener("change",Ce),e.addEventListener("blur",Ce)}}var Y={index:0,timer:null,userInteracted:!1,track:null,slides:[],init:function(){var e=this;this.track=n("#carouselTrack");var t=window.HERO_SLIDES;this.track.innerHTML=t.map(function(i,r){return'<div class="slide" role="group" aria-roledescription="diapositiva" aria-label="'+l(r+1+" de "+t.length)+'"><div class="slide-media"><img src="'+l(i.src)+'" srcset="'+l(i.srcSmall)+" 640w, "+l(i.src)+' 1024w" sizes="(max-width: 860px) 100vw, 520px" width="'+i.w+'" height="'+i.h+'" alt="'+l(i.alt)+'"'+(r===0?' fetchpriority="high" decoding="async"':' loading="lazy" decoding="async"')+"></div></div>"}).join(""),n("#carDots").innerHTML=t.map(function(i,r){return'<button type="button" role="tab" class="'+(r===0?"active":"")+'" aria-label="Ver imagen '+(r+1)+'" aria-selected="'+(r===0)+'" data-i="'+r+'"><img src="'+l(i.srcSmall||i.src)+'" width="96" height="112" alt="" loading="eager" decoding="async"></button>'}).join(""),this.slides=v(".slide",this.track),n("#carPrev").addEventListener("click",function(){e.stop(),e.go(e.index-1)}),n("#carNext").addEventListener("click",function(){e.stop(),e.go(e.index+1)}),v("#carDots button").forEach(function(i){i.addEventListener("click",function(){e.stop(),e.go(+i.dataset.i)})});var a;this.track.addEventListener("scroll",function(){cancelAnimationFrame(a),a=requestAnimationFrame(function(){var i=e.track.clientWidth;if(i){var r=Math.round(e.track.scrollLeft/i);r!==e.index&&(e.index=r,e.paint())}})},{passive:!0}),["pointerdown","touchstart","wheel","keydown"].forEach(function(i){e.track.addEventListener(i,function(){e.stop()},{passive:!0})}),this.track.addEventListener("keydown",function(i){i.key==="ArrowRight"&&(i.preventDefault(),e.stop(),e.go(e.index+1)),i.key==="ArrowLeft"&&(i.preventDefault(),e.stop(),e.go(e.index-1))}),document.addEventListener("visibilitychange",function(){document.hidden?e.pause():e.play()}),this.paint(),this.play()},go:function(e){var t=this.slides.length;this.index=(e%t+t)%t,this.track.scrollTo({left:this.track.clientWidth*this.index,behavior:"smooth"}),this.paint()},paint:function(){v("#carDots button").forEach(function(a,i){var r=i===Y.index;a.classList.toggle("active",r),a.setAttribute("aria-selected",String(r))});var e=n("#carCaption"),t=window.HERO_SLIDES[Y.index];t&&(Y.track.style.setProperty("--mobile-slide-ratio",t.w+" / "+t.h),e&&(e.textContent=t.caption))},play:function(){if(!(this.userInteracted||this.timer)&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches){var e=this;this.timer=setInterval(function(){e.go(e.index+1)},5200)}},pause:function(){clearInterval(this.timer),this.timer=null},stop:function(){this.userInteracted=!0,this.pause()}};function at(){var e=y[0].price;n("#comboGrid").innerHTML=y.map(function(t){var a=e*t.qty-t.price,i=W(t);return'<button type="button" role="radio" aria-checked="false" class="combo-card'+(t.featured?" best":"")+'" data-combo="'+t.id+'">'+(t.badge?'<span class="cc-badge">'+l(t.badge)+"</span>":"")+'<div class="cc-top"><div class="cc-img"><img src="'+i+'" width="640" height="640" loading="lazy" decoding="async" alt="'+l(t.label+" de "+d.shortName)+`"></div><div><div class='cc-title'>`+l(t.label)+"</div><div class='cc-sub'>"+l(t.sublabel)+'</div></div></div><div class="cc-price">'+f(t.price)+'</div><div class="cc-unit">'+f(t.price/t.qty)+" por "+(d.unitWord||"unidad")+"</div>"+(a>0?'<span class="cc-save">Ahorrás '+f(a)+"</span>":'<span class="cc-save muted">Precio individual</span>')+'<span class="cc-check"><i></i>Seleccionar</span></button>'}).join(""),v("#comboGrid .combo-card").forEach(function(t){t.addEventListener("click",function(){we(t.dataset.combo,"combo_grid")})})}function W(e){if(e.imagen)return e.imagen;var t=window.GALLERY||[],a=Math.min(e.qty-1,t.length-1),i=t[a]||t[0];return i?i.srcSmall||i.src:"img/hero-real-1-640.webp"}function nt(){var e=y[0].price;n("#miniCombos").innerHTML=y.map(function(t){var a=e*t.qty-t.price;return'<button type="button" class="mini-combo" data-combo="'+t.id+'" role="radio" aria-checked="false">'+(t.badge?'<span class="mc-tag">'+l(t.badge)+"</span>":"")+'<i></i><span class="mc-img"><img src="'+W(t)+'" width="640" height="640" loading="lazy" decoding="async" alt="'+l(t.label+" de "+d.shortName)+`"></span><span class='mc-body'><b>`+l(t.label)+"</b><small>"+l(t.sublabel)+'</small></span><span class="mc-right"><span class="mc-price">'+f(t.price)+"</span>"+(a>0?'<span class="mc-save">Ahorrás '+f(a)+"</span>":"")+"</span></button>"}).join(""),v("#miniCombos .mini-combo").forEach(function(t){t.addEventListener("click",function(){we(t.dataset.combo,"checkout")})})}function we(e,t){var a=y.filter(function(i){return i.id===e})[0];if(!a||a.id===s.combo.id){A();return}s.combo=a,A(),C("select_item","CustomizeProduct",{value:a.price,currency:d.currency,items:N(a),combo:a.label,num_items:a.qty,source:t||""}),C("add_to_cart","AddToCart",{value:a.price,currency:d.currency,items:N(a),combo:a.label,num_items:a.qty})}function A(){var e=s.combo,t=T(),a=y[0].price,i=a*e.qty-e.price;v("#comboGrid .combo-card").forEach(function(o){var p=o.dataset.combo===e.id;o.classList.toggle("selected",p),o.setAttribute("aria-checked",String(p)),n(".cc-check",o).lastChild.textContent=p?"Seleccionado":"Seleccionar"}),v("#miniCombos .mini-combo").forEach(function(o){var p=o.dataset.combo===e.id;o.classList.toggle("selected",p),o.setAttribute("aria-checked",String(p))}),n("#priceKicker").textContent=e.featured?"COMBO RECOMENDADO":"TU SELECCIÓN",n("#priceLabel").textContent=e.label,n("#priceValue").textContent=f(e.price),n("#priceUnit").textContent=f(e.price/e.qty)+" por "+(d.unitWord||"unidad"),n("#priceSaving").textContent=i>0?"Ahorrás "+f(i)+" frente a comprar por separado":"Precio individual · producto original sellado",n("#comboCtaLabel").textContent=e.label,n("#comboCtaPrice").textContent=f(e.price),n("#mbLabel").textContent=e.badge?e.label+" · "+e.badge:e.label,n("#mbPrice").textContent=f(e.price),n("#sumProductLabel").textContent=d.shortName+" · "+e.label,n("#sumProductMeta").textContent=(d.unitDescription?e.qty+" × "+d.unitDescription+" · ":"")+f(e.price/e.qty)+" c/u",n("#sumImage").src=W(e),n("#sumProduct").textContent=f(t.product);var r=n("#sumShipping");t.shipping>0?(r.textContent=f(t.shipping),r.classList.remove("free")):(r.textContent="GRATIS",r.classList.add("free")),n("#sumTotal").textContent=f(t.total),n("#submitPrice").textContent=f(t.total),se()}function it(){var e=window.GALLERY||[];j("#galeria",e.length>0),n("#gallery").innerHTML=e.map(function(t){return'<figure><div class="g-media"><img src="'+l(t.src)+'" srcset="'+l(t.srcSmall)+" 640w, "+l(t.src)+' 1024w" sizes="(max-width: 600px) 100vw, 560px" width="'+t.w+'" height="'+t.h+'" loading="lazy" decoding="async" alt="'+l(t.alt)+'"></div><figcaption>'+l(t.cap)+"</figcaption></figure>"}).join("")}function rt(){var e=n("#f-departamento");e.innerHTML='<option value="">Seleccioná…</option>'+Oe.map(function(t){return"<option>"+l(t)+"</option>"}).join("")}function ke(e){var t=n("#f-ciudad"),a=Ie[e]||[];if(!e){t.innerHTML='<option value="">Elegí primero el departamento</option>',t.disabled=!0;return}t.disabled=!1,t.innerHTML='<option value="">Seleccioná tu ciudad…</option>'+a.map(function(i){return"<option>"+l(i)+"</option>"}).join("")+'<option value="__otra">Otra ciudad…</option>'}function ot(){n("#carrierOptions").innerHTML=De.map(function(e){return'<button type="button" role="radio" aria-checked="false" class="carrier-opt" data-carrier="'+l(e.id)+'"><i></i><span><b>'+l(e.name)+"</b><small>"+l(e.note)+"</small></span></button>"}).join(""),v("#carrierOptions .carrier-opt").forEach(function(e){e.addEventListener("click",function(){s.carrier=e.dataset.carrier,v("#carrierOptions .carrier-opt").forEach(function(t){var a=t===e;t.classList.toggle("selected",a),t.setAttribute("aria-checked",String(a))}),L("transportadora"),P()})})}function P(){var e=n("#deliveryFs"),t=n("#deliveryBox"),a=n("#carrierBlock");if(!s.city){e.hidden=!0,n("#sumCity").textContent="—",n("#sumDelivery").textContent="—",n("#sumPayment").textContent="—",n("#sumEta").textContent="—",n("#sumCarrierRow").hidden=!0,A();return}var i=R();e.hidden=!1,i.carrierNeeded?(t.innerHTML='<div class="delivery-note carrier"><span class="dn-icon" aria-hidden="true">📦</span><div><b>Tu pedido será enviado por transportadora.</b><p>Para despachar el producto es obligatorio realizar el pago anticipado. Plazo estimado: '+l(i.eta)+". "+(d.freeShipping?"El envío no tiene costo.":"Costo de envío: "+f(i.cost)+".")+"</p></div></div>",a.hidden=!1):(t.innerHTML='<div class="delivery-note local"><span class="dn-icon" aria-hidden="true">🚚</span><div><b>Delivery a domicilio · Pagás al recibir</b><p>Entrega estimada de '+l(i.eta)+" en "+l(s.city)+". "+(d.freeShipping?"El envío no tiene costo.":"Costo de envío: "+f(i.cost)+".")+"</p></div></div>",a.hidden=!0,s.carrier="",s.prepayAccepted=!1,n("#f-prepay").checked=!1,v("#carrierOptions .carrier-opt").forEach(function(r){r.classList.remove("selected"),r.setAttribute("aria-checked","false")})),n("#sumCity").textContent=s.city+(s.department?" ("+s.department+")":""),n("#sumDelivery").textContent=i.type,n("#sumPayment").textContent=i.payment,n("#sumEta").textContent=i.eta,n("#sumCarrierRow").hidden=!i.carrierNeeded,n("#sumCarrier").textContent=s.carrier||"Elegí una",A()}var ct={nombre:"Escribí tu nombre y apellido (mínimo 5 caracteres).",telefono:"Ingresá un número de WhatsApp paraguayo válido. Ej.: 0981 123 456",departamento:"Elegí tu departamento.",ciudad:"Elegí tu ciudad.",ciudadOtra:"Escribí el nombre de tu ciudad.",barrio:"Indicá tu barrio.",direccion:"Escribí tu dirección completa (mínimo 6 caracteres).",referencia:"Agregá una referencia para encontrar el domicilio.",transportadora:"Elegí la transportadora (TSI o Multienvíos).",prepay:"Necesitamos que aceptes la condición de pago anticipado."};function st(e,t){var a=n('.field[data-field="'+e+'"]');if(a){a.classList.add("err"),a.classList.remove("ok");var i=n("#err-"+e);i&&(i.textContent=t||ct[e]||"Revisá este dato.");var r=a.querySelector("input,select,textarea");r&&r.setAttribute("aria-invalid","true")}}function L(e){var t=n('.field[data-field="'+e+'"]');if(t){t.classList.remove("err");var a=t.querySelector("input,select,textarea");a&&a.removeAttribute("aria-invalid")}}function M(e){var t=n('.field[data-field="'+e+'"]');t&&(t.classList.remove("err"),t.classList.add("ok"))}function te(e){var t=String(e||"").replace(/\D/g,"");return t.indexOf("595")===0?t="0"+t.slice(3):t.length===9&&t.charAt(0)==="9"&&(t="0"+t),t}function dt(e){return/^09[0-9]{8}$/.test(te(e))}function $(e,t){var a=n('.field[data-field="'+e+'"]');if(!a||a.hidden)return!0;var i=a.querySelector("input,select,textarea"),r=i?String(i.value||"").trim():"",o=!0;switch(e){case"nombre":o=r.replace(/\s+/g," ").length>=5&&/[a-zA-ZáéíóúÁÉÍÓÚñÑ]{2,}/.test(r);break;case"telefono":o=dt(r);break;case"departamento":o=!!r;break;case"ciudad":o=!!r;break;case"ciudadOtra":o=r.length>=3;break;case"barrio":o=r.length>=3;break;case"direccion":o=r.length>=6;break;case"referencia":o=r.length>=5;break;case"transportadora":o=!!s.carrier;break;case"prepay":o=n("#f-prepay").checked;break;default:o=!0}return o?r||e==="transportadora"||e==="prepay"?M(e):L(e):t||st(e),o}function lt(){var e=["nombre","telefono","departamento","ciudad","barrio","direccion","referencia"];return n('.field[data-field="ciudadOtra"]').hidden||e.splice(4,0,"ciudadOtra"),R().carrierNeeded&&s.city&&e.push("transportadora","prepay"),e}function ae(){var e=null;if(lt().forEach(function(i){!$(i)&&!e&&(e=i)}),e){var t=n('.field[data-field="'+e+'"]');t.scrollIntoView({behavior:"smooth",block:"center"});var a=t.querySelector("input,select,textarea");setTimeout(function(){a&&a.focus({preventScroll:!0})},320)}return!e}var J=null,Se=1;function Z(e){Se=e,v("[data-checkout-step]").forEach(function(t){t.hidden=Number(t.dataset.checkoutStep)!==e}),v("[data-progress-step]").forEach(function(t){var a=Number(t.dataset.progressStep);t.classList.toggle("active",a===e),t.classList.toggle("done",a<e)}),n("#checkoutTitle").textContent=e===1?"Datos de entrega":"Revisá tu pedido",n(".modal-sub",n("#checkoutForm")).textContent=e===1?"Completá tus datos y te confirmamos el pedido por WhatsApp.":"Verificá la información antes de confirmar.",n(".modal-card",n("#checkout")).scrollTo({top:0,behavior:"smooth"})}function ut(e){var t=n("#checkout");s.checkoutOpen||(J=document.activeElement,t.hidden=!1,document.body.classList.add("no-scroll"),s.checkoutOpen=!0,n("#checkoutForm").hidden=!1,n("#checkoutSuccess").hidden=!0,Z(1),ce(),A(),P(),X(),setTimeout(function(){n("#f-nombre").focus({preventScroll:!0})},120),C("begin_checkout","InitiateCheckout",{value:T().total,currency:d.currency,items:N(s.combo),source:e||""}))}function ne(){n("#checkout").hidden=!0,document.body.classList.remove("no-scroll"),s.checkoutOpen=!1,J&&J.focus&&J.focus({preventScroll:!0})}function pt(){return"PY"+String(Date.now()).slice(-6)+Math.floor(10+Math.random()*90)}function mt(){return/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?"Mobile":"Desktop"}function ft(e){return[O(e.nombre),te(e.telefono),e.combo,O(e.ciudad),e.subtotal].join("|")}function vt(e){try{var t=JSON.parse(localStorage.getItem(U+"_last_order")||"null");return t&&t.key===e&&Date.now()-t.at<600*1e3}catch(a){return!1}}function ht(e){try{localStorage.setItem(U+"_last_order",JSON.stringify({key:e,at:Date.now()}))}catch(t){}}function gt(){var e=function(k){var w=n('[name="'+k+'"]');return w?String(w.value||"").trim():""},t=R(),a=T(),i=s.combo,r=c.point,o=c.location||{},p=z(r&&r.lat,r&&r.lng,o.city||s.city,o.department||s.department),m=[];m.push("Barrio: "+e("barrio")),e("referencia")&&m.push("Ref: "+e("referencia")),e("comentario")&&m.push("Comentario: "+e("comentario")),m.push("Combo: "+i.label+" · "+f(i.price/i.qty)+" c/u"),t.carrierNeeded?(m.push("TRANSPORTADORA: "+s.carrier),m.push("PAGO ANTICIPADO antes del despacho")):m.push("Delivery a domicilio · PAGO CONTRA ENTREGA"),m.push("Envío: "+(a.shipping===0?"GRATIS":f(a.shipping))),m.push("Entrega estimada: "+t.eta);var b=[];return g.utm_content&&b.push("utm_content: "+g.utm_content),g.utm_term&&b.push("utm_term: "+g.utm_term),b.push("URL: "+window.location.href.slice(0,300)),document.referrer&&b.push("Referrer: "+document.referrer.slice(0,200)),b.push("Dispositivo: "+mt()),{id:pt(),producto:d.name+" · "+i.label,precio:Math.round(i.price/i.qty),cantidad:i.qty,subtotal:a.total,ganancia:0,nombre:e("nombre").replace(/\s+/g," "),telefono:te(e("telefono")),correo:"No informado",ci:"No informado",departamento:s.department,ciudad:s.city,direccion:e("direccion"),referencia:m.join(" | "),ubicacion_maps:e("ubicacion")||"No informado",direccion_escrita:e("direccion").slice(0,500),direccion_detectada:String(o.direccionDetectada||"").slice(0,500),latitude:r?Number(r.lat.toFixed(7)):null,longitude:r?Number(r.lng.toFixed(7)):null,gps_accuracy:o.accuracy==null?null:Number(o.accuracy),barrio:e("barrio").slice(0,180),neighborhood:e("barrio").slice(0,180),ciudad_detectada:String(o.city||"").slice(0,180),departamento_detectado:String(o.department||"").slice(0,180),codigo_postal:String(o.postcode||"").slice(0,32),zona_entrega:p.code,forma_pago_entrega:p.formaPago,ubicacion_origen:o.origin||"",maps_url:r?B(r.lat,r.lng):"",estado:"Pendiente",origen:d.origin,created_at:new Date().toISOString(),observaciones:b.join(" | "),ip:"No informado",user_agent:String(navigator.userAgent).slice(0,400),utm_source:g.utm_source,utm_medium:g.utm_medium,utm_campaign:g.utm_campaign,fbclid:g.fbclid,gclid:g.gclid,combo:i.label,tipo_entrega:t.type,transportadora:t.carrierNeeded?s.carrier:"",requiere_pago_anticipado:!!t.carrierNeeded,costo_envio:a.shipping,total_pagar:a.total}}function bt(e){return d.useEdgeFunction?fetch(d.edgeFunctionUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(e)}).then(function(t){return t.json().catch(function(){return{}}).then(function(a){if(!t.ok)throw new Error(a.error||"No se pudo registrar el pedido.");return a})}):fetch(d.supabaseUrl+"/rest/v1/"+d.supabaseTable,{method:"POST",headers:{apikey:d.supabaseAnonKey,Authorization:"Bearer "+d.supabaseAnonKey,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(e)}).then(function(t){return t.ok?{}:t.text().then(function(a){throw new Error(a||"HTTP "+t.status)})})}function yt(e){if(e.preventDefault(),!s.submitting){if(Se===1){ae()&&Z(2);return}if(n("#f-website").value){ne();return}var t=n("#formError");if(t.hidden=!0,!ae()){t.hidden=!1,t.textContent="Revisá los campos marcados en rojo para continuar.";return}var a=gt(),i=ft(a);if(vt(i)){t.hidden=!1,t.textContent="Ya registramos este pedido hace unos minutos. Si querés hacer otro, escribinos por WhatsApp.";return}var r=n("#submitBtn");s.submitting=!0,r.disabled=!0,r.classList.add("loading"),n(".btn-text",r).textContent="Registrando pedido…",bt(a).then(function(){ht(i),s.lastOrder=a,s.submitting=!1,r.disabled=!1,r.classList.remove("loading"),C("purchase","Purchase",{transaction_id:a.id,value:a.total_pagar,currency:d.currency,shipping:a.costo_envio,num_items:a.cantidad,items:N(s.combo),combo:a.combo,tipo_entrega:a.tipo_entrega}),Ct(a)}).catch(function(o){console.error("[order]",o),s.submitting=!1,r.disabled=!1,r.classList.remove("loading"),n(".btn-text",r).innerHTML='Confirmar pedido · <span id="submitPrice">'+f(T().total)+"</span>",t.hidden=!1,t.textContent="No pudimos registrar tu pedido. Revisá tu conexión e intentá de nuevo, o escribinos por WhatsApp.",x("No se pudo enviar el pedido")})}}function Ct(e){var t=R();n("#checkoutForm").hidden=!0,n("#checkoutSuccess").hidden=!1,n("#okOrderId").textContent=e.id,n("#okImage").src=W(s.combo),n("#okProduct").textContent=d.shortName+" · "+e.combo,n("#okTotal").textContent=f(e.total_pagar),n("#okCustomer").textContent=e.nombre,n("#okCity").textContent=e.ciudad,n("#okAddress").textContent=e.direccion+(e.barrio?" · "+e.barrio:""),n("#okDelivery").textContent=e.tipo_entrega+(e.transportadora?" ("+e.transportadora+")":""),n("#okPayment").textContent=e.requiere_pago_anticipado?"Pago anticipado":"Pago contra entrega",n("#okEta").textContent=t.eta,n("#okStep3").lastChild.textContent=e.requiere_pago_anticipado?" Pagás por adelantado y despachamos por "+e.transportadora:" Recibís el producto y pagás al recibir",n("#okPrepay").hidden=!e.requiere_pago_anticipado,n("#okPayAmount").textContent=f(e.total_pagar),n("#okPrepayIntro").textContent="Como tu pedido va por "+(e.transportadora||"transportadora")+", necesitamos el pago antes de despacharlo. Podés transferir o depositar a esta cuenta:";var a=e.requiere_pago_anticipado?"Pago anticipado":"Pago contra entrega",i=`Hola, quiero confirmar esta compra:
+/* ============================================================
+   MOTOR DE LA LANDING — VG Shop Paraguay
+   Carrusel · Combos · Checkout · Supabase (pedidos_web) ·
+   Meta Pixel · GA4 · GTM · WhatsApp
+   Sitio 100% estático: funciona en GitHub Pages sin servidor.
 
-*PEDIDO `+e.id+`*
-Cliente: `+e.nombre+`
-WhatsApp: `+e.telefono+`
-Producto: `+d.shortName+`
-Combo: `+e.combo+`
-Total: `+f(e.total_pagar)+`
-Envío: `+(e.costo_envio===0?"GRATIS":f(e.costo_envio))+`
-Entrega prevista: `+t.eta+`
-Modalidad: `+e.tipo_entrega+(e.transportadora?" ("+e.transportadora+")":"")+`
-Pago: `+a+`
-Dirección: `+e.direccion+`
-Barrio: `+e.barrio+`
-Ciudad: `+e.ciudad+" ("+e.departamento+")";e.ubicacion_maps&&e.ubicacion_maps!=="No informado"&&(i+=`
-Ubicación: `+e.ubicacion_maps),e.requiere_pago_anticipado&&(i+=`
+   ⚠️  NO hace falta editar este archivo para cambiar de producto.
+       Los textos están en contenido.js y los datos en config.js.
+   ============================================================ */
+(function () {
+  "use strict";
 
-Quiero coordinar el pago anticipado y enviar el comprobante.`),n("#okWhats").href="https://wa.me/"+d.whatsapp+"?text="+encodeURIComponent(i),n("#okWhatsappNumber").textContent="+"+String(d.whatsapp).replace(/(\d{3})(\d{3})(\d{3})(\d{3})/,"$1 $2 $3 $4"),n(".modal-card").scrollTop=0}function Et(){var e={50:!1,90:!1},t=!1;function a(){t=!1;var r=document.documentElement,o=r.scrollHeight-window.innerHeight;if(!(o<=0)){var p=window.scrollY/o*100;[50,90].forEach(function(m){!e[m]&&p>=m&&(e[m]=!0,C("scroll","",{percent_scrolled:m,page_location:window.location.href}))}),e[50]&&e[90]&&window.removeEventListener("scroll",i)}}function i(){t||(t=!0,requestAnimationFrame(a))}window.addEventListener("scroll",i,{passive:!0})}function Lt(){var e=window.location.origin+window.location.pathname.replace(/index\.html$/,""),t=d.siteUrl||e;d.siteUrl&&window.location.hostname!=="localhost"&&window.location.hostname!=="127.0.0.1"&&window.location.protocol!=="file:"&&(t=e);var a=n("#canonicalLink");a&&(a.href=t);var i=n("#ogUrl");i&&(i.content=t);var r=n("#ogImage");r&&(r.content=t+"img/og.jpg");var o=document.querySelector('meta[name="twitter:image"]');o&&(o.content=t+"img/og.jpg");var p=n("#ldProduct");if(p){var m=y.map(function(b){return b.price});p.textContent=JSON.stringify({"@context":"https://schema.org","@type":"Product",name:d.name,sku:d.sku,brand:{"@type":"Brand",name:d.brand},category:d.category,description:(document.querySelector('meta[name="description"]')||{}).content||"",url:t,image:(window.HERO_SLIDES||[]).map(function(b){return t+b.src}),offers:{"@type":"AggregateOffer",priceCurrency:d.currency,lowPrice:Math.min.apply(null,m),highPrice:Math.max.apply(null,m),offerCount:y.length,availability:"https://schema.org/InStock",areaServed:"PY",url:t}})}}function h(e){var t=e.split(".").reduce(function(a,i){return a&&a[i]!==void 0?a[i]:void 0},G);return t==null?"":t}function j(e,t){var a=n(e);a&&(a.hidden=!t)}function wt(){v("[data-txt]").forEach(function(u){var S=h(u.dataset.txt);/<[a-z][\s\S]*>/i.test(S)?u.innerHTML=S:u.textContent=S});var e=n("#siteNav");e&&(e.innerHTML=(h("menu")||[]).map(function(u){return'<a href="'+l(u.ancla)+'">'+l(u.texto)+"</a>"}).join(""));var t=n("#heroBenefits");t&&(t.innerHTML=(h("hero.beneficios")||[]).map(function(u){return'<li><span aria-hidden="true">'+l(u.icono||"✓")+"</span> "+l(u.texto)+"</li>"}).join(""));var a=n("#trustStrip");a&&(a.innerHTML=(h("confianza")||[]).map(function(u){return'<div><span aria-hidden="true">'+l(u.icono)+"</span><b>"+l(u.titulo)+"</b><small>"+l(u.detalle)+"</small></div>"}).join(""));var i=n("#storyList");i&&(i.innerHTML=(h("explicacion.puntos")||[]).map(function(u){return"<li>"+u+"</li>"}).join(""));var r=n("#storyNote");r&&(r.innerHTML=h("explicacion.aclaracion"),r.hidden=!h("explicacion.aclaracion"));var o=n("#salesList");if(o){var p=(G.ventaVisual?window.SALES_STACK:null)||[];o.innerHTML=p.map(function(u){var S='<picture><source media="(max-width: 700px)" srcset="'+l(u.srcSmall||u.src)+'"><img src="'+l(u.src)+'" width="'+(u.w||1024)+'" height="'+(u.h||1024)+'" loading="lazy" decoding="async" alt="'+l(u.alt||"")+'"></picture>';return u.checkout===!1?'<div class="sales-item">'+S+"</div>":'<button type="button" class="sales-item is-clickable" data-checkout="venta_visual" aria-label="'+l(u.alt||"Comprar "+d.shortName)+'">'+S+"</button>"}).join(""),j("#ventaVisual",p.length>0)}var m=n("#specGrid");if(m){var b=h("caracteristicas.items")||[];m.innerHTML=b.map(function(u){return'<div class="spec"><span aria-hidden="true">'+l(u.icono)+"</span><b>"+l(u.titulo)+"</b><small>"+l(u.detalle)+"</small></div>"}).join(""),j("#specsSection",b.length>0)}var k=!!G.modoUso;if(j("#howtoSection",k),k){n("#howtoSteps").innerHTML=(h("modoUso.pasos")||[]).map(function(u,S){return'<li><span class="step-n">'+(S+1)+"</span><div><b>"+l(u.titulo)+"</b><p>"+l(u.detalle)+"</p></div></li>"}).join("");var w=n("#howtoNote");w.innerHTML=h("modoUso.aclaracion"),w.hidden=!h("modoUso.aclaracion")}var D=n("#deliveryGrid");D&&(D.innerHTML=(h("entrega.tarjetas")||[]).map(function(u){return'<article class="delivery-card"><span class="dc-icon" aria-hidden="true">'+l(u.icono)+"</span><h3>"+l(u.titulo)+"</h3><p>"+u.texto+"</p><small>"+l(u.nota)+"</small></article>"}).join(""));var F=n("#faqList");F&&(F.innerHTML=(h("faq.items")||[]).map(function(u){return"<details><summary>"+l(u.p)+"</summary><div><p>"+u.r+"</p></div></details>"}).join(""));var I=h("avisoLegal");j("#legalSection",!!I),I&&(n("#legalText").innerHTML=I);var xe=n("#trustPoints");xe&&(xe.innerHTML=(h("respaldo.puntos")||[]).map(function(u){return'<li><span aria-hidden="true">'+l(u.icono)+"</span><p>"+u.texto+"</p></li>"}).join(""));var Ne=n("#trustLegal");Ne&&(Ne.innerHTML=(h("respaldo.legal")||[]).map(function(u){return"<p>"+u+"</p>"}).join(""));var kt=Math.min.apply(null,y.map(function(u){return u.price})),Te=n("#finalPrice");Te&&(Te.innerHTML="Desde <b>"+f(kt)+"</b> · Envío sin costo a todo el país");var Ae=n("#comboCtaPrefix");Ae&&(Ae.textContent=h("combos.botonPrefijo")||"Comprar");var Pe=n("#waFooter");Pe&&(Pe.textContent="+"+String(d.whatsapp).replace(/(\d{3})(\d{3})(\d{3})(\d{3})/,"$1 $2 $3 $4"));var Me=n("#gtmNoscript");if(Me&&d.gtmId&&(Me.innerHTML='<iframe src="https://www.googletagmanager.com/ns.html?id='+l(d.gtmId)+'" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe>'),d.theme){var St=document.documentElement;Object.keys(d.theme).forEach(function(u){St.style.setProperty("--"+u,d.theme[u])})}}function _e(){wt(),Lt(),n("#year").textContent=new Date().getFullYear(),ze(),Y.init(),at(),nt(),it(),rt(),ot(),Be(),ce(),A(),v("[data-checkout]").forEach(function(e){e.addEventListener("click",function(){ut(e.dataset.checkout)})}),v("[data-close-checkout]").forEach(function(e){e.addEventListener("click",ne)}),n("#openTrust").addEventListener("click",Ve),v("[data-close-trust]").forEach(function(e){e.addEventListener("click",le)}),document.addEventListener("keydown",function(e){e.key==="Escape"&&(n("#trustModal").hidden?s.checkoutOpen&&ne():le())}),tt(),n("#f-departamento").addEventListener("change",function(){s.department=this.value,s.city="",s.carrier="",ke(this.value),n('.field[data-field="ciudadOtra"]').hidden=!0,n("#f-ciudad-otra").value="",L("departamento"),$("departamento"),P()}),n("#f-ciudad").addEventListener("change",function(){var e=n('.field[data-field="ciudadOtra"]');this.value==="__otra"?(e.hidden=!1,s.city=n("#f-ciudad-otra").value.trim(),setTimeout(function(){n("#f-ciudad-otra").focus({preventScroll:!0})},60)):(e.hidden=!0,n("#f-ciudad-otra").value="",s.city=this.value),s.carrier="",L("ciudad"),this.value&&M("ciudad"),P()}),n("#f-ciudad-otra").addEventListener("input",function(){s.city=this.value.trim(),this.value.trim().length>=3&&(L("ciudadOtra"),M("ciudadOtra")),P()}),n("#f-prepay").addEventListener("change",function(){s.prepayAccepted=this.checked,this.checked&&L("prepay")}),["nombre","telefono","barrio","direccion","referencia"].forEach(function(e){var t=n('.field[data-field="'+e+'"]'),a=t.querySelector("input,textarea");a.addEventListener("blur",function(){a.value.trim()&&$(e)}),a.addEventListener("input",function(){t.classList.contains("err")&&$(e,!0)&&L(e)})}),n("#btnReviewOrder").addEventListener("click",function(){ae()&&Z(2)}),n("#btnEditOrder").addEventListener("click",function(){Z(1)}),n("#orderForm").addEventListener("submit",yt),v("#waHero, #waFloat, #waFinal, #waFooter, #okWhats").forEach(function(e){e.addEventListener("click",function(){C("generate_lead","Lead",{value:T().total,currency:d.currency,items:N(s.combo),method:"whatsapp"})})}),se(),Et(),C("view_item","ViewContent",{value:s.combo.price,currency:d.currency,items:N(s.combo)})}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",_e):_e()})();
+  var CFG = window.PRODUCT_CONFIG;
+  var COMBOS = window.COMBOS;
+  var RATES = window.SHIPPING_RATES;
+  var DELIVERY_ZONES = window.DELIVERY_ZONES || {};
+  var CARRIERS = window.CARRIERS;
+  var CITIES = window.CITIES_BY_DEPARTMENT;
+  var TXT = window.CONTENIDO || {};
+  var DEPARTMENTS = window.DEPARTMENTS;
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  /* ---------------- Estado ---------------- */
+  var state = {
+    combo: COMBOS.filter(function (c) { return c.featured; })[0] || COMBOS[0],
+    department: "",
+    city: "",
+    carrier: "",
+    prepayAccepted: false,
+    submitting: false,
+    lastOrder: null,
+    checkoutOpen: false,
+  };
+
+  /* ---------------- Utilidades ---------------- */
+  function fmt(n) {
+    return "Gs. " + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+  function norm(s) {
+    return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function toast(msg) {
+    var t = $("#toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { t.classList.remove("show"); }, 3200);
+  }
+
+  /* ---------------- Parámetros de campaña ---------------- */
+  // Clave de almacenamiento propia por landing, para que dos productos
+  // publicados en el mismo dominio no se pisen entre sí.
+  var STORAGE_KEY = "vg_" + (CFG.origin || "landing");
+
+  var QS = new URLSearchParams(window.location.search);
+  var TRACKING = {
+    utm_source: QS.get("utm_source") || "",
+    utm_medium: QS.get("utm_medium") || "",
+    utm_campaign: QS.get("utm_campaign") || "",
+    utm_content: QS.get("utm_content") || "",
+    utm_term: QS.get("utm_term") || "",
+    fbclid: QS.get("fbclid") || "",
+    gclid: QS.get("gclid") || "",
+  };
+  // Persistimos la atribución para que sobreviva a la navegación interna.
+  try {
+    var saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY + "_utm") || "{}");
+    var hasNew = Object.keys(TRACKING).some(function (k) { return TRACKING[k]; });
+    if (hasNew) sessionStorage.setItem(STORAGE_KEY + "_utm", JSON.stringify(TRACKING));
+    else Object.keys(TRACKING).forEach(function (k) { TRACKING[k] = TRACKING[k] || saved[k] || ""; });
+  } catch (e) { /* sessionStorage bloqueado */ }
+
+  /* ---------------- Analítica ---------------- */
+  var META_STANDARD = ["PageView", "ViewContent", "AddToCart", "CustomizeProduct",
+    "InitiateCheckout", "Lead", "Contact", "Search", "AddPaymentInfo"];
+
+  function cookieValue(name) {
+    var prefix = name + "=";
+    var parts = String(document.cookie || "").split(";");
+    for (var i = 0; i < parts.length; i += 1) {
+      var part = parts[i].trim();
+      if (part.indexOf(prefix) === 0) return decodeURIComponent(part.slice(prefix.length));
+    }
+    return "";
+  }
+
+  function landingUrl() {
+    return window.location.origin + window.location.pathname;
+  }
+
+  /**
+   * Dispara un evento en GA4 (gtag), Meta Pixel (fbq) y dataLayer (GTM).
+   * @param {string} ga4      nombre del evento GA4
+   * @param {string} meta     nombre del evento Meta Pixel ("" para omitir)
+   * @param {object} params   parámetros (value siempre numérico, currency PYG)
+   */
+  /** ID único por evento: permite deduplicar si algún día se suma la API de Conversiones. */
+  function eventId(name) {
+    return name + "." + Date.now().toString(36) + "." + Math.random().toString(36).slice(2, 8);
+  }
+
+  function track(ga4, meta, params) {
+    params = params || {};
+    try {
+      if (window.dataLayer) {
+        window.dataLayer.push(Object.assign({ event: ga4 }, params));
+      }
+      if (typeof window.gtag === "function" && ga4) {
+        window.gtag("event", ga4, params);
+      }
+      if (typeof window.fbq === "function" && meta) {
+        var qty = params.num_items || state.combo.qty;
+        var mp = {
+          content_name: CFG.name,
+          content_category: CFG.category,
+          content_ids: [CFG.sku],
+          content_type: "product",
+          contents: [{ id: CFG.sku, quantity: qty, item_price: state.combo.price / state.combo.qty }],
+          currency: CFG.currency,
+          num_items: qty,
+        };
+        if (typeof params.value === "number") mp.value = params.value;
+        if (params.transaction_id) mp.order_id = params.transaction_id;
+        if (params.combo) mp.content_variant = params.combo;
+        window.fbq(
+          META_STANDARD.indexOf(meta) >= 0 ? "track" : "trackCustom",
+          meta,
+          mp,
+          { eventID: params.event_id || eventId(meta) },
+        );
+      }
+    } catch (e) {
+      console.warn("[track]", e);
+    }
+  }
+
+  function itemPayload(combo) {
+    return [{
+      item_id: CFG.sku,
+      item_name: CFG.name,
+      item_brand: CFG.brand,
+      item_category: CFG.category,
+      item_variant: combo.label,
+      price: combo.price,
+      quantity: combo.qty,
+    }];
+  }
+
+  /* ---------------- Envío y cobertura ---------------- */
+  function findRate(city) {
+    var n = norm(city);
+    for (var i = 0; i < RATES.length; i++) if (norm(RATES[i].city) === n) return RATES[i];
+    return null;
+  }
+
+  function normalizeLocationName(text) {
+    return norm(text)
+      .replace(/\b(departamento|depto|department|distrito|capital)\b/g, " ")
+      .replace(/[^a-z0-9ñ]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function detectarZona(lat, lng, city, department) {
+    var local = DELIVERY_ZONES.ASUNCION_CENTRAL || {};
+    var cityName = normalizeLocationName(city);
+    var departmentName = normalizeLocationName(department);
+    var localCities = (local.cities || []).map(normalizeLocationName);
+    var localDepartments = (local.departments || []).map(normalizeLocationName);
+    var isLocal = !!cityName && localCities.indexOf(cityName) !== -1;
+    if (!isLocal && departmentName) isLocal = localDepartments.indexOf(departmentName) !== -1;
+
+    var code = isLocal
+      ? "ASUNCION_CENTRAL"
+      : (cityName || departmentName ? "INTERIOR" : "SIN_DETERMINAR");
+    var cfg = DELIVERY_ZONES[code] || {};
+    var rate = cityName ? findRate(city) : null;
+    // La cobertura específica de una ciudad tiene prioridad sobre la regla
+    // general del interior. Así podemos habilitar delivery sin ampliar toda
+    // una zona o departamento.
+    var hasDirectDelivery = code === "ASUNCION_CENTRAL" ||
+      (!!rate && rate.prepay !== true);
+    return {
+      code: code,
+      tipoEntrega: hasDirectDelivery ? "DELIVERY" : (cfg.tipoEntrega || "SIN_DETERMINAR"),
+      formaPago: hasDirectDelivery ? "CONTRA_ENTREGA" : (cfg.formaPago || "A_CONFIRMAR"),
+      polygon: cfg.polygon || null,
+      lat: lat == null ? null : lat,
+      lng: lng == null ? null : lng,
+    };
+  }
+
+  function estimatedDeliveryDate(orderDate) {
+    var date = new Date(orderDate || new Date());
+    date.setHours(12, 0, 0, 0);
+    // De lunes a viernes se entrega al día siguiente. Los pedidos del sábado
+    // y del domingo se programan para el lunes.
+    date.setDate(date.getDate() + (date.getDay() === 6 ? 2 : 1));
+    return date;
+  }
+
+  function estimatedDeliveryLabel(orderDate) {
+    var text = new Intl.DateTimeFormat("es-PY", {
+      weekday: "long", day: "numeric", month: "long",
+    }).format(estimatedDeliveryDate(orderDate));
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  function promoDeadlineDate(baseDate) {
+    var date = new Date(baseDate || new Date());
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + 4);
+    return date;
+  }
+
+  function paintCommercialDates() {
+    var deadline = promoDeadlineDate();
+    var deadlineDay = $("#priceDeadlineDay");
+    var deadlineMonth = $("#priceDeadlineMonth");
+    var deadlineTime = $("#priceDeadline");
+    var deliveryDate = $("#checkoutDeliveryDate");
+    if (deadlineDay) deadlineDay.textContent = String(deadline.getDate());
+    if (deadlineMonth) {
+      deadlineMonth.textContent = "de " + new Intl.DateTimeFormat("es-PY", { month: "long" }).format(deadline);
+    }
+    if (deadlineTime) deadlineTime.dateTime = deadline.getFullYear() + "-" +
+      String(deadline.getMonth() + 1).padStart(2, "0") + "-" + String(deadline.getDate()).padStart(2, "0");
+    if (deliveryDate) deliveryDate.textContent = "Entrega prevista: " + estimatedDeliveryLabel();
+  }
+
+  /** Devuelve la modalidad de entrega calculada para la ciudad actual. */
+  function deliveryInfo() {
+    var rate = state.city ? findRate(state.city) : null;
+    var covered = !!rate;
+    var point = typeof mapState !== "undefined" && mapState.point ? mapState.point : {};
+    var detectedZone = detectarZona(point.lat, point.lng, state.city, state.department);
+    var carrierNeeded = detectedZone.tipoEntrega !== "DELIVERY";
+    var realCost = covered ? rate.cost : 0;
+    var eta = estimatedDeliveryLabel();
+    return {
+      covered: covered,
+      zone: detectedZone.code,
+      carrierNeeded: carrierNeeded,
+      prepay: carrierNeeded,
+      realCost: realCost,
+      cost: CFG.freeShipping ? 0 : realCost,
+      eta: eta,
+      type: carrierNeeded ? "Transportadora" : "Delivery a domicilio",
+      payment: carrierNeeded ? "Pago anticipado" : "Pago contra entrega",
+    };
+  }
+
+  function totals() {
+    var d = deliveryInfo();
+    return { product: state.combo.price, shipping: d.cost, total: state.combo.price + d.cost, delivery: d };
+  }
+
+  /* ---------------- WhatsApp ---------------- */
+  function waLink(extra) {
+    var t = totals();
+    var msg = "Hola, quiero comprar " + CFG.shortName + ". Me interesa el combo de " +
+      state.combo.label + " por " + fmt(t.total) + ".";
+    msg += " Mi ciudad es " + (state.city || "________") + ".";
+    if (extra) msg += " " + extra;
+    return "https://wa.me/" + CFG.whatsapp + "?text=" + encodeURIComponent(msg);
+  }
+  function refreshWaLinks() {
+    var href = waLink();
+    ["#waHero", "#waFloat", "#waFinal", "#waFooter"].forEach(function (sel) {
+      var el = $(sel); if (el) el.href = href;
+    });
+  }
+
+  /* ---------------- 1. Barra superior deslizante ---------------- */
+  function renderAnnounce() {
+    var ANNOUNCE_ITEMS = TXT.barraSuperior || [];
+    var track = $("#announceTrack");
+    if (!track) return;
+    var html = ANNOUNCE_ITEMS.map(function (t) {
+      return '<span class="announce-item">' + esc(t) + "</span>";
+    }).join("");
+    // Duplicamos la lista para que el bucle de -50% sea continuo y sin cortes.
+    track.innerHTML = html + html;
+  }
+
+  /* ---------------- Datos de pago (pedidos con pago anticipado) ---------------- */
+  function renderPaymentInfo() {
+    var info = CFG.paymentInfo;
+    if (!info) return;
+    $$("[data-pay]").forEach(function (el) {
+      var v = info[el.dataset.pay];
+      if (v) el.textContent = v;
+    });
+
+    $$("[data-copy-alias]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var alias = String(info.alias || "");
+        var done = function () {
+          btn.textContent = "¡Copiado!";
+          btn.classList.add("done");
+          toast("Copiamos " + alias + " al portapapeles");
+          setTimeout(function () {
+            btn.textContent = "Copiar";
+            btn.classList.remove("done");
+          }, 2500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(alias).then(done).catch(function () { fallbackCopy(alias, done); });
+        } else {
+          fallbackCopy(alias, done);
+        }
+      });
+    });
+  }
+
+  /** Copiado para navegadores sin API de portapapeles (o sin HTTPS). */
+  function fallbackCopy(text, done) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      done();
+    } catch (e) {
+      toast("Copiá este dato a mano: " + text);
+    }
+  }
+
+  /* ---------------- Modal de procedencia y respaldo ---------------- */
+  function openTrust() {
+    $("#trustModal").hidden = false;
+    document.body.classList.add("no-scroll");
+    track("view_promotion", "", { promotion_name: "procedencia_y_respaldo" });
+  }
+  function closeTrust() {
+    $("#trustModal").hidden = true;
+    if (!state.checkoutOpen) document.body.classList.remove("no-scroll");
+  }
+
+  /* ---------------- Ubicación: selector con mapa ----------------
+     Usamos Leaflet + OpenStreetMap: sin API key, sin costo y sin backend.
+     La librería se descarga recién cuando el cliente abre el mapa, así no
+     pesa en la carga inicial de la landing.
+  ---------------------------------------------------------------- */
+  var LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+  var LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+  var DEFAULT_POINT = { lat: -25.2637, lng: -57.5759 };  // Asunción
+
+  var mapState = {
+    loaded: false,
+    loading: null,
+    map: null,
+    marker: null,
+    point: null,
+    location: {
+      direccionDetectada: "", barrio: "", city: "", department: "", postcode: "",
+      accuracy: null, origin: "", zone: "SIN_DETERMINAR",
+      tipoEntrega: "SIN_DETERMINAR", formaPago: "A_CONFIRMAR",
+    },
+    geocodeCache: new Map(),
+    reverseCache: new Map(),
+    nominatimQueue: Promise.resolve(),
+    lastNominatimAt: 0,
+    reverseSequence: 0,
+    addressTimer: null,
+    lastGeocodedAddress: "",
+  };
+
+  function mapsUrl(lat, lng) {
+    return "https://www.google.com/maps?q=" + lat.toFixed(6) + "," + lng.toFixed(6);
+  }
+
+  function wait(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  /** Cola única: el sitio nunca supera una consulta por segundo a Nominatim. */
+  function nominatimRequest(url) {
+    mapState.nominatimQueue = mapState.nominatimQueue.catch(function () { return null; }).then(function () {
+      var remaining = Math.max(0, 1100 - (Date.now() - mapState.lastNominatimAt));
+      return wait(remaining);
+    }).then(function () {
+      mapState.lastNominatimAt = Date.now();
+      return fetch(url, { headers: { Accept: "application/json", "Accept-Language": "es" } });
+    }).then(function (response) {
+      if (!response.ok) throw new Error("Geocoding HTTP " + response.status);
+      return response.json();
+    });
+    return mapState.nominatimQueue;
+  }
+
+  function locationDetails(result) {
+    var a = result && result.address ? result.address : {};
+    return {
+      direccionDetectada: String(result && result.display_name || "").slice(0, 500),
+      barrio: a.neighbourhood || a.suburb || a.quarter || a.city_district || "",
+      city: a.city || a.town || a.village || a.municipality || a.county || "",
+      department: a.state || "",
+      postcode: a.postcode || "",
+      country: a.country || "",
+      road: a.road || "",
+      houseNumber: a.house_number || "",
+    };
+  }
+
+  function geocodeAddress(address) {
+    var key = normalizeLocationName(address);
+    if (!key || key.length < 6) return Promise.resolve(null);
+    if (mapState.geocodeCache.has(key)) return Promise.resolve(mapState.geocodeCache.get(key));
+    var url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=py" +
+      "&addressdetails=1&accept-language=es&q=" + encodeURIComponent(address);
+    return nominatimRequest(url).then(function (list) {
+      var hit = list && list.length ? list[0] : null;
+      var value = hit ? {
+        lat: parseFloat(hit.lat), lng: parseFloat(hit.lon), details: locationDetails(hit),
+      } : null;
+      mapState.geocodeCache.set(key, value);
+      return value;
+    });
+  }
+
+  function reverseGeocode(lat, lng) {
+    var key = Number(lat).toFixed(5) + "," + Number(lng).toFixed(5);
+    if (mapState.reverseCache.has(key)) return Promise.resolve(mapState.reverseCache.get(key));
+    var url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1" +
+      "&accept-language=es&zoom=18&lat=" + encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lng);
+    return nominatimRequest(url).then(function (result) {
+      var details = locationDetails(result || {});
+      mapState.reverseCache.set(key, details);
+      return details;
+    });
+  }
+
+  function closestOptionValue(select, wanted) {
+    var target = normalizeLocationName(wanted);
+    if (!target) return "";
+    var options = Array.prototype.slice.call(select.options || []);
+    var exact = options.filter(function (o) { return normalizeLocationName(o.value) === target; })[0];
+    if (exact) return exact.value;
+    var near = options.filter(function (o) {
+      var value = normalizeLocationName(o.value);
+      return value && (value.indexOf(target) !== -1 || target.indexOf(value) !== -1);
+    })[0];
+    return near ? near.value : "";
+  }
+
+  function detectedDepartment(name, city) {
+    if (normalizeLocationName(city) === "asuncion") return "Asunción";
+    var select = $("#f-departamento");
+    var matched = closestOptionValue(select, name);
+    if (matched) return matched;
+    var n = normalizeLocationName(name);
+    if (n === "central") return "Central";
+    return "";
+  }
+
+  function syncDetectedPlace(details) {
+    if (!details) return;
+    var department = detectedDepartment(details.department, details.city);
+    if (department) {
+      state.department = department;
+      $("#f-departamento").value = department;
+      fillCities(department);
+      clearError("departamento"); markOk("departamento");
+    }
+
+    if (details.city && state.department) {
+      var citySelect = $("#f-ciudad");
+      var cityValue = closestOptionValue(citySelect, details.city);
+      var otherField = $('.field[data-field="ciudadOtra"]');
+      if (cityValue) {
+        citySelect.value = cityValue;
+        otherField.hidden = true;
+        $("#f-ciudad-otra").value = "";
+        state.city = cityValue;
+      } else {
+        citySelect.value = "__otra";
+        otherField.hidden = false;
+        $("#f-ciudad-otra").value = details.city;
+        state.city = details.city;
+      }
+      clearError("ciudad"); markOk("ciudad");
+    }
+
+    paintDelivery();
+  }
+
+  function renderLocationStatus(data, warning) {
+    var card = $("#locationCard");
+    if (!card) return;
+    card.hidden = false;
+    card.classList.toggle("warning", !!warning);
+    card.dataset.origin = warning ? "" : (data.origin || "");
+    card.dataset.zone = warning ? "SIN_DETERMINAR" : (data.zone || "SIN_DETERMINAR");
+    card.dataset.accuracy = warning || data.accuracy == null ? "" : String(data.accuracy);
+    if (warning) {
+      card.innerHTML = "<strong>⚠️ No pudimos ubicar esta dirección exactamente</strong>" +
+        "<span>Podés mover el pin o usar tu ubicación actual. Igualmente podés continuar con tu pedido.</span>";
+      return;
+    }
+
+    var placeDepartment = detectedDepartment(data.department, data.city) || data.department;
+    var place = [data.city || state.city, placeDepartment || state.department].filter(Boolean).join(", ") ||
+      "Punto confirmado en el mapa";
+    var zoneLabel = data.zone === "ASUNCION_CENTRAL" ? "Asunción y Central" :
+      (data.zone === "INTERIOR" ? "Interior" : "A confirmar");
+    var deliveryLabel = data.tipoEntrega === "DELIVERY" ? "Delivery" :
+      (data.tipoEntrega === "TRANSPORTADORA" ? "Envío por transportadora" : "Entrega a confirmar");
+    var paymentLabel = data.formaPago === "CONTRA_ENTREGA" ? "Pago al recibir" :
+      (data.formaPago === "PAGO_PREVIO" ? "Pago previo al envío" : "Forma de pago a confirmar");
+    card.innerHTML =
+      "<strong>✅ Ubicación confirmada</strong>" +
+      '<span><i class="lc-icon">📍</i>' + esc(place) + "</span>" +
+      '<span><i class="lc-icon">🚚</i>Zona de entrega: ' + esc(zoneLabel) + " · " + esc(deliveryLabel) + "</span>" +
+      '<span><i class="lc-icon">💵</i>' + esc(paymentLabel) + "</span>";
+  }
+
+  function updateMarker(lat, lng) {
+    if (!mapState.map) return;
+    if (!mapState.marker) {
+      mapState.marker = window.L.marker([lat, lng], { draggable: true, autoPan: true }).addTo(mapState.map);
+      mapState.marker.on("dragend", function () {
+        var p = mapState.marker.getLatLng();
+        setMapLocation(p.lat, p.lng, "PIN_MANUAL", { recenter: false });
+      });
+    } else {
+      mapState.marker.setLatLng([lat, lng]);
+    }
+  }
+
+  function setMapLocation(lat, lng, source, options) {
+    options = options || {};
+    lat = Number(lat); lng = Number(lng);
+    if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      return Promise.resolve(null);
+    }
+
+    mapState.point = { lat: lat, lng: lng };
+    mapState.location.origin = source || "PIN_MANUAL";
+    if (options.accuracy != null) mapState.location.accuracy = Math.round(options.accuracy);
+    else if (source !== "GPS") mapState.location.accuracy = null;
+    updateMarker(lat, lng);
+    if (options.recenter !== false && mapState.map) {
+      mapState.map.setView([lat, lng], options.zoom || (source === "GPS" ? 17 : 16));
+    }
+
+    $("#f-ubicacion").value = mapsUrl(lat, lng);
+    $("#mapStatus").textContent = "✓ Ubicación marcada correctamente";
+    setLocationHint("¿No quedó exactamente en tu casa? Mové el pin hasta tu domicilio.", "ok");
+    if (source) track("share_location", "", { method: source.toLowerCase() });
+
+    var sequence = ++mapState.reverseSequence;
+    return reverseGeocode(lat, lng).then(function (details) {
+      if (sequence !== mapState.reverseSequence) return null;
+      Object.keys(details).forEach(function (key) { mapState.location[key] = details[key]; });
+      var zone = detectarZona(lat, lng, details.city, details.department);
+      mapState.location.zone = zone.code;
+      mapState.location.tipoEntrega = zone.tipoEntrega;
+      mapState.location.formaPago = zone.formaPago;
+      syncDetectedPlace(details);
+      renderLocationStatus(mapState.location, false);
+      return mapState.location;
+    }).catch(function () {
+      if (sequence !== mapState.reverseSequence) return null;
+      var zone = detectarZona(lat, lng, state.city, state.department);
+      mapState.location.zone = zone.code;
+      mapState.location.tipoEntrega = zone.tipoEntrega;
+      mapState.location.formaPago = zone.formaPago;
+      renderLocationStatus(mapState.location, false);
+      return mapState.location;
+    });
+  }
+
+  function loadLeaflet() {
+    if (mapState.loaded) return Promise.resolve();
+    if (mapState.loading) return mapState.loading;
+    mapState.loading = new Promise(function (resolve, reject) {
+      var css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = LEAFLET_CSS;
+      document.head.appendChild(css);
+
+      var js = document.createElement("script");
+      js.src = LEAFLET_JS;
+      js.async = true;
+      js.onload = function () { mapState.loaded = true; resolve(); };
+      js.onerror = function () { mapState.loading = null; reject(new Error("leaflet")); };
+      document.head.appendChild(js);
+    });
+    return mapState.loading;
+  }
+
+  function setMapPoint(lat, lng, recenter) {
+    return setMapLocation(lat, lng, "PIN_MANUAL", { recenter: recenter !== false });
+  }
+
+  function buildMap() {
+    var L = window.L;
+    var start = mapState.point || DEFAULT_POINT;
+
+    mapState.map = L.map("mapCanvas", { zoomControl: true, attributionControl: true })
+      .setView([start.lat, start.lng], mapState.point ? 16 : 12);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(mapState.map);
+
+    mapState.map.on("click", function (e) {
+      setMapLocation(e.latlng.lat, e.latlng.lng, "PIN_MANUAL", { recenter: false });
+    });
+
+    if (mapState.point) updateMarker(start.lat, start.lng);
+    $("#mapLoading").hidden = true;
+  }
+
+  /** Lee un enlace ya cargado en el campo para reabrir el mapa en ese punto. */
+  function pointFromUrl(url) {
+    var m = String(url || "").match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+    if (!m) return null;
+    var lat = parseFloat(m[1]);
+    var lng = parseFloat(m[2]);
+    if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+    return { lat: lat, lng: lng };
+  }
+
+  function openMapPicker() {
+    var existing = pointFromUrl($("#f-ubicacion").value);
+    if (existing) mapState.point = existing;
+
+    if (mapState.map) {
+      $("#mapLoading").hidden = true;
+      setTimeout(function () {
+        mapState.map.invalidateSize();
+        if (mapState.point) {
+          updateMarker(mapState.point.lat, mapState.point.lng);
+          mapState.map.setView([mapState.point.lat, mapState.point.lng], 16);
+        }
+      }, 60);
+      return;
+    }
+
+    $("#mapLoading").hidden = false;
+    loadLeaflet().then(function () {
+      setTimeout(buildMap, 40);
+    }).catch(function () {
+      $("#mapLoading").innerHTML =
+        "No pudimos cargar el mapa. Revisá tu conexión e intentá nuevamente.";
+    });
+  }
+
+  function closeMapPicker() {
+    $("#mapModal").hidden = true;
+    if (!state.checkoutOpen) document.body.classList.remove("no-scroll");
+  }
+
+  /** Geocodificación con Nominatim (OpenStreetMap), sin clave ni backend. */
+  function searchPlace() {
+    var q = $("#mapSearch").value.trim();
+    var msg = $("#mapSearchMsg");
+    if (q.length < 3) {
+      msg.hidden = false;
+      msg.className = "map-search-msg bad";
+      msg.textContent = "Escribí al menos 3 letras para buscar.";
+      return;
+    }
+    var btn = $("#btnSearch");
+    btn.disabled = true;
+    btn.textContent = "Buscando…";
+    msg.hidden = false;
+    msg.className = "map-search-msg";
+    msg.textContent = "Buscando “" + q + "”…";
+
+    var url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=py&q=" +
+      encodeURIComponent(q);
+
+    fetch(url, { headers: { Accept: "application/json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (list) {
+        btn.disabled = false;
+        btn.textContent = "Buscar";
+        if (!list || !list.length) {
+          msg.className = "map-search-msg bad";
+          msg.textContent = "No encontramos ese lugar. Probá con otra referencia o marcalo tocando el mapa.";
+          return;
+        }
+        var hit = list[0];
+        msg.className = "map-search-msg";
+        msg.textContent = hit.display_name.slice(0, 90);
+        setMapPoint(parseFloat(hit.lat), parseFloat(hit.lon), true);
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = "Buscar";
+        msg.className = "map-search-msg bad";
+        msg.textContent = "No pudimos buscar ahora. Marcá tu ubicación tocando el mapa.";
+      });
+  }
+
+  function lookupWrittenAddress() {
+    var input = $("#f-direccion");
+    var status = $("#addressLookup");
+    var address = input.value.trim();
+    if (address.length < 6 || address === mapState.lastGeocodedAddress) return;
+    if (mapState.location.origin === "GPS") {
+      status.className = "address-lookup ok";
+      status.textContent = "✓ Conservamos la ubicación GPS, que es más precisa.";
+      return;
+    }
+
+    if (mapState.location.origin === "DIRECCION") clearLocation();
+
+    mapState.lastGeocodedAddress = address;
+    status.className = "address-lookup searching";
+    status.textContent = "Buscando la dirección en el mapa…";
+    geocodeAddress(address).then(function (hit) {
+      if (mapState.location.origin === "GPS") return;
+      if (!hit) {
+        status.className = "address-lookup bad";
+        status.textContent = "No pudimos ubicarla exactamente. Podés usar el GPS o mover el pin.";
+        renderLocationStatus({}, true);
+        return;
+      }
+      status.className = "address-lookup ok";
+      status.textContent = "✓ Dirección encontrada. Podés ajustar el pin si hace falta.";
+      setMapLocation(hit.lat, hit.lng, "DIRECCION", { recenter: true, zoom: 17 });
+    }).catch(function () {
+      status.className = "address-lookup bad";
+      status.textContent = "No pudimos buscar ahora. Podés usar el GPS o marcar el mapa.";
+      renderLocationStatus({}, true);
+    });
+  }
+
+  function scheduleWrittenAddressLookup() {
+    clearTimeout(mapState.addressTimer);
+    mapState.addressTimer = setTimeout(lookupWrittenAddress, 850);
+  }
+
+  /** Pide la ubicación al navegador. `onPoint` recibe las coordenadas. */
+  function requestGeolocation(btn, onPoint, onFail) {
+    if (!navigator.geolocation) {
+      onFail("Tu navegador no permite compartir la ubicación.");
+      return;
+    }
+    var original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span aria-hidden="true">🎯</span> Buscando tu ubicación…';
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        btn.disabled = false;
+        btn.innerHTML = original;
+        onPoint(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+      },
+      function (err) {
+        btn.disabled = false;
+        btn.innerHTML = original;
+        var message = "No pudimos acceder a tu ubicación. Podés escribir tu dirección o marcarla manualmente en el mapa.";
+        if (err.code === 1) message = "No diste permiso para usar tu ubicación. Podés escribir tu dirección o marcarla manualmente.";
+        else if (err.code === 2) message = "Tu ubicación no está disponible en este momento. Podés escribir tu dirección o mover el pin.";
+        else if (err.code === 3) message = "La búsqueda de tu ubicación tardó demasiado. Intentá otra vez o escribí tu dirección.";
+        onFail(message);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
+  }
+
+  function setLocationHint(msg, cls) {
+    var hint = $("#geoHint");
+    hint.textContent = msg;
+    hint.classList.remove("ok", "bad");
+    if (cls) hint.classList.add(cls);
+  }
+
+  /** Refleja en el checkout la ubicación elegida. */
+  function applyLocation(url, method) {
+    $("#f-ubicacion").value = url;
+    var status = $("#mapStatus");
+    if (status) status.textContent = "✓ Ubicación marcada correctamente";
+    setLocationHint("¡Listo! Con tu ubicación el repartidor te encuentra más rápido.", "ok");
+    if (method) track("share_location", "", { method: method });
+  }
+
+  function clearLocation() {
+    $("#f-ubicacion").value = "";
+    if (mapState.map && mapState.marker) mapState.map.removeLayer(mapState.marker);
+    mapState.marker = null;
+    mapState.point = null;
+    mapState.reverseSequence += 1;
+    mapState.location = {
+      direccionDetectada: "", barrio: "", city: "", department: "", postcode: "",
+      accuracy: null, origin: "", zone: "SIN_DETERMINAR",
+      tipoEntrega: "SIN_DETERMINAR", formaPago: "A_CONFIRMAR",
+    };
+    if ($("#mapStatus")) $("#mapStatus").textContent = "Tocá el mapa para marcar tu ubicación";
+    setLocationHint("¿No quedó exactamente en tu casa? Mové el pin hasta tu domicilio.");
+    if ($("#locationCard")) $("#locationCard").hidden = true;
+  }
+
+  function initLocationPicker() {
+    if (!$("#btnPickMap")) return;
+
+    $("#btnPickMap").addEventListener("click", openMapPicker);
+    $$("[data-close-map]").forEach(function (b) { b.addEventListener("click", closeMapPicker); });
+    $("#btnClearMap").addEventListener("click", clearLocation);
+
+    $("#btnSearch").addEventListener("click", searchPlace);
+    $("#mapSearch").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); searchPlace(); }
+    });
+
+    // Geolocalizar desde el checkout: marca el punto y abre el mapa para ajustar.
+    $("#btnGeo").addEventListener("click", function () {
+      var btn = this;
+      requestGeolocation(btn, function (lat, lng) {
+        mapState.point = { lat: lat, lng: lng };
+        applyLocation(mapsUrl(lat, lng), "geolocation");
+        openMapPicker();
+      }, function (msg) {
+        setLocationHint(msg + " Podés tocar “Marcar en el mapa”.", "bad");
+      });
+    });
+
+    // Geolocalizar desde dentro del mapa: solo mueve el pin.
+    $("#btnGeoMap").addEventListener("click", function () {
+      var btn = this;
+      var msg = $("#mapSearchMsg");
+      requestGeolocation(btn, function (lat, lng) {
+        setMapPoint(lat, lng, true);
+        msg.hidden = false;
+        msg.className = "map-search-msg";
+        msg.textContent = "Listo, marcamos tu ubicación actual. Ajustá el pin si hace falta.";
+      }, function (text) {
+        msg.hidden = false;
+        msg.className = "map-search-msg bad";
+        msg.textContent = text;
+      });
+    });
+
+    $("#btnConfirmMap").addEventListener("click", function () {
+      var p = mapState.point || DEFAULT_POINT;
+      applyLocation(mapsUrl(p.lat, p.lng), "map_picker");
+      closeMapPicker();
+      toast("Ubicación guardada 📍");
+    });
+
+    // Enlace pegado a mano
+    $("#f-ubicacion").addEventListener("input", function () {
+      var v = this.value.trim();
+      if (!v) { $("#mapResult").hidden = true; return; }
+      $("#btnOpenMaps").href = /^https?:\/\//i.test(v) ? v : "https://www.google.com/maps";
+      var p = pointFromUrl(v);
+      if (p) mapState.point = p;
+      $("#mapResultText").textContent = v.replace("https://www.google.com/maps?q=", "");
+      $("#mapResult").hidden = false;
+    });
+  }
+
+  function initInlineLocationPicker() {
+    if (!$("#mapCanvas") || !$("#btnGeo")) return;
+    $("#btnGeo").addEventListener("click", function () {
+      var btn = this;
+      requestGeolocation(btn, function (lat, lng, accuracy) {
+        setMapLocation(lat, lng, "GPS", { recenter: true, zoom: 17, accuracy: accuracy });
+        var lookup = $("#addressLookup");
+        lookup.className = "address-lookup ok";
+        lookup.textContent = "✓ Usamos tu ubicación GPS exacta.";
+      }, function (msg) {
+        setLocationHint(msg, "bad");
+      });
+    });
+
+    var addressInput = $("#f-direccion");
+    addressInput.addEventListener("input", function () {
+      clearTimeout(mapState.addressTimer);
+      if (this.value.trim() !== mapState.lastGeocodedAddress) {
+        var lookup = $("#addressLookup");
+        lookup.className = "address-lookup";
+        lookup.textContent = this.value.trim().length >= 6
+          ? "Al terminar de editar, intentaremos ubicarla en el mapa."
+          : "";
+      }
+    });
+    addressInput.addEventListener("change", scheduleWrittenAddressLookup);
+    addressInput.addEventListener("blur", scheduleWrittenAddressLookup);
+  }
+
+  /* ---------------- 2. Carrusel ---------------- */
+  var carousel = {
+    index: 0,
+    timer: null,
+    userInteracted: false,
+    track: null,
+    slides: [],
+
+    init: function () {
+      var self = this;
+      this.track = $("#carouselTrack");
+      var slides = window.HERO_SLIDES;
+
+      this.track.innerHTML = slides.map(function (s, i) {
+        return '<div class="slide" role="group" aria-roledescription="diapositiva" aria-label="' +
+          esc((i + 1) + " de " + slides.length) + '">' +
+          '<div class="slide-media">' +
+          '<img src="' + esc(s.src) + '" srcset="' + esc(s.srcSmall) + ' 640w, ' + esc(s.src) + ' 1024w"' +
+          ' sizes="(max-width: 860px) 100vw, 520px" width="' + s.w + '" height="' + s.h + '"' +
+          ' alt="' + esc(s.alt) + '"' +
+          (i === 0 ? ' fetchpriority="high" decoding="async"' : ' loading="lazy" decoding="async"') + '>' +
+          "</div></div>";
+      }).join("");
+
+      $("#carDots").innerHTML = slides.map(function (s, i) {
+        return '<button type="button" role="tab" class="' + (i === 0 ? "active" : "") +
+          '" aria-label="Ver imagen ' + (i + 1) + '" aria-selected="' + (i === 0) + '" data-i="' + i + '">' +
+          '<img src="' + esc(s.srcSmall || s.src) + '" width="96" height="112" alt="" loading="eager" decoding="async">' +
+          '</button>';
+      }).join("");
+
+      this.slides = $$(".slide", this.track);
+
+      $("#carPrev").addEventListener("click", function () { self.stop(); self.go(self.index - 1); });
+      $("#carNext").addEventListener("click", function () { self.stop(); self.go(self.index + 1); });
+      $$("#carDots button").forEach(function (b) {
+        b.addEventListener("click", function () { self.stop(); self.go(+b.dataset.i); });
+      });
+
+      // Sincroniza el índice al deslizar con el dedo
+      var raf;
+      this.track.addEventListener("scroll", function () {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(function () {
+          var w = self.track.clientWidth;
+          if (!w) return;
+          var i = Math.round(self.track.scrollLeft / w);
+          if (i !== self.index) { self.index = i; self.paint(); }
+        });
+      }, { passive: true });
+
+      // Cualquier interacción detiene el avance automático
+      ["pointerdown", "touchstart", "wheel", "keydown"].forEach(function (ev) {
+        self.track.addEventListener(ev, function () { self.stop(); }, { passive: true });
+      });
+
+      // Navegación con teclado
+      this.track.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowRight") { e.preventDefault(); self.stop(); self.go(self.index + 1); }
+        if (e.key === "ArrowLeft") { e.preventDefault(); self.stop(); self.go(self.index - 1); }
+      });
+
+      // Pausa mientras el carrusel no está visible o la pestaña está oculta
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) self.pause(); else self.play();
+      });
+
+      // Sin esto la leyenda arranca vacía: paint() solo corría al deslizar.
+      this.paint();
+      this.play();
+    },
+
+    go: function (i) {
+      var n = this.slides.length;
+      this.index = (i % n + n) % n;
+      this.track.scrollTo({ left: this.track.clientWidth * this.index, behavior: "smooth" });
+      this.paint();
+    },
+
+    paint: function () {
+      $$("#carDots button").forEach(function (b, i) {
+        var on = i === carousel.index;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-selected", String(on));
+      });
+      var cap = $("#carCaption");
+      var slide = window.HERO_SLIDES[carousel.index];
+      if (slide) {
+        carousel.track.style.setProperty("--mobile-slide-ratio", slide.w + " / " + slide.h);
+        if (cap) cap.textContent = slide.caption;
+      }
+    },
+
+    play: function () {
+      if (this.userInteracted || this.timer) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      var self = this;
+      this.timer = setInterval(function () { self.go(self.index + 1); }, 5200);
+    },
+
+    pause: function () { clearInterval(this.timer); this.timer = null; },
+
+    stop: function () { this.userInteracted = true; this.pause(); },
+  };
+
+  /* ---------------- 8. Combos ---------------- */
+  function renderCombos() {
+    var base = COMBOS[0].price;
+
+    $("#comboGrid").innerHTML = COMBOS.map(function (c) {
+      var save = base * c.qty - c.price;
+      var im = comboImage(c);
+      return '<button type="button" role="radio" aria-checked="false" class="combo-card' +
+        (c.featured ? " best" : "") + '" data-combo="' + c.id + '">' +
+        (c.badge ? '<span class="cc-badge">' + esc(c.badge) + "</span>" : "") +
+        '<div class="cc-top">' +
+        '<div class="cc-img"><img src="' + im + '" width="640" height="640" loading="lazy" decoding="async" alt="' + esc(c.label + " de " + CFG.shortName) + '"></div>' +
+        "<div><div class='cc-title'>" + esc(c.label) + "</div><div class='cc-sub'>" + esc(c.sublabel) + "</div></div>" +
+        "</div>" +
+        '<div class="cc-price">' + fmt(c.price) + "</div>" +
+        '<div class="cc-unit">' + fmt(c.price / c.qty) + " por " + (CFG.unitWord || "unidad") + "</div>" +
+        (save > 0
+          ? '<span class="cc-save">Ahorrás ' + fmt(save) + "</span>"
+          : '<span class="cc-save muted">Precio individual</span>') +
+        '<span class="cc-check"><i></i>Seleccionar</span>' +
+        "</button>";
+    }).join("");
+
+    $$("#comboGrid .combo-card").forEach(function (card) {
+      card.addEventListener("click", function () { selectCombo(card.dataset.combo, "combo_grid"); });
+    });
+  }
+
+  /** Imagen que representa a cada combo (checkout, resumen y confirmación).
+      Se puede fijar con `imagen` en cada combo de config.js; si no, se usa
+      una de la galería según la cantidad. */
+  function comboImage(combo) {
+    if (combo.imagen) return combo.imagen;
+    var g = window.GALLERY || [];
+    var i = Math.min(combo.qty - 1, g.length - 1);
+    var pick = g[i] || g[0];
+    return pick ? (pick.srcSmall || pick.src) : "img/hero-real-1-640.webp";
+  }
+
+  function renderMiniCombos() {
+    var base = COMBOS[0].price;
+    $("#miniCombos").innerHTML = COMBOS.map(function (c) {
+      var save = base * c.qty - c.price;
+      return '<button type="button" class="mini-combo" data-combo="' + c.id + '" role="radio" aria-checked="false">' +
+        (c.badge ? '<span class="mc-tag">' + esc(c.badge) + "</span>" : "") +
+        "<i></i>" +
+        '<span class="mc-img"><img src="' + comboImage(c) + '" width="640" height="640" loading="lazy" decoding="async" alt="' + esc(c.label + " de " + CFG.shortName) + '"></span>' +
+        "<span class='mc-body'><b>" + esc(c.label) + "</b><small>" + esc(c.sublabel) + "</small></span>" +
+        '<span class="mc-right"><span class="mc-price">' + fmt(c.price) + "</span>" +
+        (save > 0 ? '<span class="mc-save">Ahorrás ' + fmt(save) + "</span>" : "") +
+        "</span></button>";
+    }).join("");
+    $$("#miniCombos .mini-combo").forEach(function (b) {
+      b.addEventListener("click", function () { selectCombo(b.dataset.combo, "checkout"); });
+    });
+  }
+
+  function selectCombo(id, source) {
+    var c = COMBOS.filter(function (x) { return x.id === id; })[0];
+    if (!c || c.id === state.combo.id) { paintCombo(); return; }
+    state.combo = c;
+    paintCombo();
+    track("select_item", "CustomizeProduct", {
+      value: c.price, currency: CFG.currency, items: itemPayload(c),
+      combo: c.label, num_items: c.qty, source: source || "",
+    });
+    // AddToCart es un evento estándar que Meta usa para optimizar campañas.
+    track("add_to_cart", "AddToCart", {
+      value: c.price, currency: CFG.currency, items: itemPayload(c),
+      combo: c.label, num_items: c.qty,
+    });
+  }
+
+  function paintCombo() {
+    var c = state.combo;
+    var t = totals();
+    var base = COMBOS[0].price;
+    var save = base * c.qty - c.price;
+
+    $$("#comboGrid .combo-card").forEach(function (card) {
+      var on = card.dataset.combo === c.id;
+      card.classList.toggle("selected", on);
+      card.setAttribute("aria-checked", String(on));
+      $(".cc-check", card).lastChild.textContent = on ? "Seleccionado" : "Seleccionar";
+    });
+    $$("#miniCombos .mini-combo").forEach(function (b) {
+      var on = b.dataset.combo === c.id;
+      b.classList.toggle("selected", on);
+      b.setAttribute("aria-checked", String(on));
+    });
+
+    // Precio del hero
+    $("#priceKicker").textContent = c.featured ? "COMBO RECOMENDADO" : "TU SELECCIÓN";
+    $("#priceLabel").textContent = c.label;
+    $("#priceValue").textContent = fmt(c.price);
+    $("#priceUnit").textContent = fmt(c.price / c.qty) + " por " + (CFG.unitWord || "unidad");
+    $("#priceSaving").textContent = save > 0
+      ? "Ahorrás " + fmt(save) + " frente a comprar por separado"
+      : "Precio individual · producto original sellado";
+
+    // CTA de combos
+    $("#comboCtaLabel").textContent = c.label;
+    $("#comboCtaPrice").textContent = fmt(c.price);
+
+    // Barra móvil
+    $("#mbLabel").textContent = c.badge ? c.label + " · " + c.badge : c.label;
+    $("#mbPrice").textContent = fmt(c.price);
+
+    // Resumen del checkout
+    $("#sumProductLabel").textContent = CFG.shortName + " · " + c.label;
+    $("#sumProductMeta").textContent =
+      (CFG.unitDescription ? c.qty + " × " + CFG.unitDescription + " · " : "") +
+      fmt(c.price / c.qty) + " c/u";
+    $("#sumImage").src = comboImage(c);
+    $("#sumProduct").textContent = fmt(t.product);
+    var ship = $("#sumShipping");
+    if (t.shipping > 0) { ship.textContent = fmt(t.shipping); ship.classList.remove("free"); }
+    else { ship.textContent = "GRATIS"; ship.classList.add("free"); }
+    $("#sumTotal").textContent = fmt(t.total);
+    $("#submitPrice").textContent = fmt(t.total);
+
+    refreshWaLinks();
+  }
+
+  /* ---------------- 12. Galería ---------------- */
+  function renderGallery() {
+    var fotos = window.GALLERY || [];
+    // Si no queda ninguna foto, la sección entera desaparece.
+    toggleSection("#galeria", fotos.length > 0);
+    $("#gallery").innerHTML = fotos.map(function (g) {
+      return "<figure>" +
+        '<div class="g-media"><img src="' + esc(g.src) + '" srcset="' + esc(g.srcSmall) + " 640w, " + esc(g.src) + ' 1024w"' +
+        ' sizes="(max-width: 600px) 100vw, 560px" width="' + g.w + '" height="' + g.h + '"' +
+        ' loading="lazy" decoding="async" alt="' + esc(g.alt) + '"></div>' +
+        "<figcaption>" + esc(g.cap) + "</figcaption></figure>";
+    }).join("");
+  }
+
+  /* ---------------- Formulario: departamento / ciudad ---------------- */
+  function fillDepartments() {
+    var sel = $("#f-departamento");
+    sel.innerHTML = '<option value="">Seleccioná…</option>' +
+      DEPARTMENTS.map(function (d) { return "<option>" + esc(d) + "</option>"; }).join("");
+  }
+
+  function fillCities(dep) {
+    var sel = $("#f-ciudad");
+    var list = CITIES[dep] || [];
+    if (!dep) {
+      sel.innerHTML = '<option value="">Elegí primero el departamento</option>';
+      sel.disabled = true;
+      return;
+    }
+    sel.disabled = false;
+    sel.innerHTML = '<option value="">Seleccioná tu ciudad…</option>' +
+      list.map(function (c) { return "<option>" + esc(c) + "</option>"; }).join("") +
+      '<option value="__otra">Otra ciudad…</option>';
+  }
+
+  function renderCarriers() {
+    $("#carrierOptions").innerHTML = CARRIERS.map(function (c) {
+      return '<button type="button" role="radio" aria-checked="false" class="carrier-opt" data-carrier="' + esc(c.id) + '">' +
+        "<i></i><span><b>" + esc(c.name) + "</b><small>" + esc(c.note) + "</small></span></button>";
+    }).join("");
+    $$("#carrierOptions .carrier-opt").forEach(function (b) {
+      b.addEventListener("click", function () {
+        state.carrier = b.dataset.carrier;
+        $$("#carrierOptions .carrier-opt").forEach(function (x) {
+          var on = x === b;
+          x.classList.toggle("selected", on);
+          x.setAttribute("aria-checked", String(on));
+        });
+        clearError("transportadora");
+        paintDelivery();
+      });
+    });
+  }
+
+  /* Bloque de entrega + resumen dependiente de la ciudad */
+  function paintDelivery() {
+    var fs = $("#deliveryFs");
+    var box = $("#deliveryBox");
+    var carrierBlock = $("#carrierBlock");
+
+    if (!state.city) {
+      fs.hidden = true;
+      $("#sumCity").textContent = "—";
+      $("#sumDelivery").textContent = "—";
+      $("#sumPayment").textContent = "—";
+      $("#sumEta").textContent = "—";
+      $("#sumCarrierRow").hidden = true;
+      paintCombo();
+      return;
+    }
+
+    var d = deliveryInfo();
+    fs.hidden = false;
+
+    if (!d.carrierNeeded) {
+      box.innerHTML =
+        '<div class="delivery-note local"><span class="dn-icon" aria-hidden="true">🚚</span><div>' +
+        "<b>Delivery a domicilio · Pagás al recibir</b>" +
+        "<p>Entrega estimada de " + esc(d.eta) + " en " + esc(state.city) + ". " +
+        (CFG.freeShipping ? "El envío no tiene costo." : "Costo de envío: " + fmt(d.cost) + ".") +
+        "</p></div></div>";
+      carrierBlock.hidden = true;
+      state.carrier = "";
+      state.prepayAccepted = false;
+      $("#f-prepay").checked = false;
+      $$("#carrierOptions .carrier-opt").forEach(function (x) {
+        x.classList.remove("selected"); x.setAttribute("aria-checked", "false");
+      });
+    } else {
+      box.innerHTML =
+        '<div class="delivery-note carrier"><span class="dn-icon" aria-hidden="true">📦</span><div>' +
+        "<b>Tu pedido será enviado por transportadora.</b>" +
+        "<p>Para despachar el producto es obligatorio realizar el pago anticipado. " +
+        "Plazo estimado: " + esc(d.eta) + ". " +
+        (CFG.freeShipping ? "El envío no tiene costo." : "Costo de envío: " + fmt(d.cost) + ".") +
+        "</p></div></div>";
+      carrierBlock.hidden = false;
+    }
+
+    $("#sumCity").textContent = state.city + (state.department ? " (" + state.department + ")" : "");
+    $("#sumDelivery").textContent = d.type;
+    $("#sumPayment").textContent = d.payment;
+    $("#sumEta").textContent = d.eta;
+    $("#sumCarrierRow").hidden = !d.carrierNeeded;
+    $("#sumCarrier").textContent = state.carrier || "Elegí una";
+
+    paintCombo();
+  }
+
+  /* ---------------- Validación ---------------- */
+  var MSG = {
+    nombre: "Escribí tu nombre y apellido (mínimo 5 caracteres).",
+    telefono: "Ingresá un número de WhatsApp paraguayo válido. Ej.: 0981 123 456",
+    departamento: "Elegí tu departamento.",
+    ciudad: "Elegí tu ciudad.",
+    ciudadOtra: "Escribí el nombre de tu ciudad.",
+    direccion: "Escribí la dirección y una referencia de entrega (mínimo 10 caracteres).",
+    transportadora: "Elegí la transportadora (TSI o Multienvíos).",
+    prepay: "Necesitamos que aceptes la condición de pago anticipado.",
+  };
+
+  function setError(name, msg) {
+    var w = $('.field[data-field="' + name + '"]');
+    if (!w) return;
+    w.classList.add("err");
+    w.classList.remove("ok");
+    var e = $("#err-" + name);
+    if (e) e.textContent = msg || MSG[name] || "Revisá este dato.";
+    var input = w.querySelector("input,select,textarea");
+    if (input) input.setAttribute("aria-invalid", "true");
+  }
+  function clearError(name) {
+    var w = $('.field[data-field="' + name + '"]');
+    if (!w) return;
+    w.classList.remove("err");
+    var input = w.querySelector("input,select,textarea");
+    if (input) input.removeAttribute("aria-invalid");
+  }
+  function markOk(name) {
+    var w = $('.field[data-field="' + name + '"]');
+    if (w) { w.classList.remove("err"); w.classList.add("ok"); }
+  }
+
+  /** Normaliza un número paraguayo a formato local 09XXXXXXXX. */
+  function normalizePhone(raw) {
+    var d = String(raw || "").replace(/\D/g, "");
+    if (d.indexOf("595") === 0) d = "0" + d.slice(3);
+    else if (d.length === 9 && d.charAt(0) === "9") d = "0" + d;
+    return d;
+  }
+  function validPhone(raw) {
+    return /^09[0-9]{8}$/.test(normalizePhone(raw));
+  }
+
+  function validateField(name, silent) {
+    var w = $('.field[data-field="' + name + '"]');
+    if (!w || w.hidden) return true;
+    var input = w.querySelector("input,select,textarea");
+    var v = input ? String(input.value || "").trim() : "";
+    var ok = true;
+
+    switch (name) {
+      case "nombre": ok = v.replace(/\s+/g, " ").length >= 5 && /[a-zA-ZáéíóúÁÉÍÓÚñÑ]{2,}/.test(v); break;
+      case "telefono": ok = validPhone(v); break;
+      case "departamento": ok = !!v; break;
+      case "ciudad": ok = !!v; break;
+      case "ciudadOtra": ok = v.length >= 3; break;
+      case "direccion": ok = v.length >= 10; break;
+      case "transportadora": ok = !!state.carrier; break;
+      case "prepay": ok = $("#f-prepay").checked; break;
+      default: ok = true;
+    }
+
+    if (ok) { if (v || name === "transportadora" || name === "prepay") markOk(name); else clearError(name); }
+    else if (!silent) setError(name);
+    return ok;
+  }
+
+  function requiredFields() {
+    var list = ["nombre", "telefono", "departamento", "ciudad", "direccion"];
+    if (!$('.field[data-field="ciudadOtra"]').hidden) list.splice(4, 0, "ciudadOtra");
+    if (deliveryInfo().carrierNeeded && state.city) { list.push("transportadora", "prepay"); }
+    return list;
+  }
+
+  function validateAll() {
+    var first = null;
+    requiredFields().forEach(function (f) {
+      if (!validateField(f) && !first) first = f;
+    });
+    if (first) {
+      var w = $('.field[data-field="' + first + '"]');
+      w.scrollIntoView({ behavior: "smooth", block: "center" });
+      var input = w.querySelector("input,select,textarea");
+      setTimeout(function () { if (input) input.focus({ preventScroll: true }); }, 320);
+    }
+    return !first;
+  }
+
+  /* ---------------- Checkout ---------------- */
+  var lastFocused = null;
+  var checkoutStep = 1;
+
+  function showCheckoutStep(step) {
+    checkoutStep = step;
+    $$('[data-checkout-step]').forEach(function (panel) {
+      panel.hidden = Number(panel.dataset.checkoutStep) !== step;
+    });
+    $$('[data-progress-step]').forEach(function (item) {
+      var itemStep = Number(item.dataset.progressStep);
+      item.classList.toggle("active", itemStep === step);
+      item.classList.toggle("done", itemStep < step);
+    });
+    $("#checkoutTitle").textContent = "Datos de entrega";
+    $(".modal-sub", $("#checkoutForm")).textContent = "Completá tus datos y confirmá el pedido en un solo paso.";
+    $(".modal-card", $("#checkout")).scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function openCheckout(source) {
+    var m = $("#checkout");
+    if (state.checkoutOpen) return;
+    lastFocused = document.activeElement;
+    m.hidden = false;
+    document.body.classList.add("no-scroll");
+    state.checkoutOpen = true;
+    $("#checkoutForm").hidden = false;
+    $("#checkoutSuccess").hidden = true;
+    showCheckoutStep(1);
+    paintCommercialDates();
+    paintCombo();
+    paintDelivery();
+    openMapPicker();
+    setTimeout(function () { $("#f-nombre").focus({ preventScroll: true }); }, 120);
+
+    track("begin_checkout", "InitiateCheckout", {
+      value: totals().total, currency: CFG.currency,
+      items: itemPayload(state.combo), source: source || "",
+    });
+  }
+
+  function closeCheckout() {
+    $("#checkout").hidden = true;
+    document.body.classList.remove("no-scroll");
+    state.checkoutOpen = false;
+    if (lastFocused && lastFocused.focus) lastFocused.focus({ preventScroll: true });
+  }
+
+  function orderNumber() {
+    return "PY" + String(Date.now()).slice(-6) + Math.floor(10 + Math.random() * 90);
+  }
+
+  function deviceType() {
+    return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "Mobile" : "Desktop";
+  }
+
+  /** Evita que el mismo pedido se registre dos veces (doble toque / reintento). */
+  function dedupeKey(order) {
+    return [norm(order.nombre), normalizePhone(order.telefono), order.combo, norm(order.ciudad), order.subtotal].join("|");
+  }
+  function isDuplicate(key) {
+    try {
+      var prev = JSON.parse(localStorage.getItem(STORAGE_KEY + "_last_order") || "null");
+      return prev && prev.key === key && Date.now() - prev.at < 10 * 60 * 1000;
+    } catch (e) { return false; }
+  }
+  function rememberOrder(key) {
+    try { localStorage.setItem(STORAGE_KEY + "_last_order", JSON.stringify({ key: key, at: Date.now() })); } catch (e) { }
+  }
+
+  function buildOrder() {
+    var g = function (n) { var el = $('[name="' + n + '"]'); return el ? String(el.value || "").trim() : ""; };
+    var d = deliveryInfo();
+    var t = totals();
+    var c = state.combo;
+    var point = mapState.point;
+    var location = mapState.location || {};
+    var detectedZone = detectarZona(
+      point && point.lat, point && point.lng,
+      location.city || state.city, location.department || state.department,
+    );
+
+    var refParts = [];
+    refParts.push("Dirección y referencia: " + g("direccion"));
+    if (g("comentario")) refParts.push("Comentario: " + g("comentario"));
+    refParts.push("Combo: " + c.label + " · " + fmt(c.price / c.qty) + " c/u");
+    if (d.carrierNeeded) {
+      refParts.push("TRANSPORTADORA: " + state.carrier);
+      refParts.push("PAGO ANTICIPADO antes del despacho");
+    } else {
+      refParts.push("Delivery a domicilio · PAGO CONTRA ENTREGA");
+    }
+    refParts.push("Envío: " + (t.shipping === 0 ? "GRATIS" : fmt(t.shipping)));
+    refParts.push("Entrega estimada: " + d.eta);
+
+    var obs = [];
+    if (TRACKING.utm_content) obs.push("utm_content: " + TRACKING.utm_content);
+    if (TRACKING.utm_term) obs.push("utm_term: " + TRACKING.utm_term);
+    obs.push("URL: " + window.location.href.slice(0, 300));
+    if (document.referrer) obs.push("Referrer: " + document.referrer.slice(0, 200));
+    obs.push("Dispositivo: " + deviceType());
+
+    return {
+      id: orderNumber(),
+      producto: CFG.name + " · " + c.label,
+      precio: Math.round(c.price / c.qty),
+      cantidad: c.qty,
+      subtotal: t.total,                  // el panel muestra `subtotal` como total
+      ganancia: 0,
+      nombre: g("nombre").replace(/\s+/g, " "),
+      telefono: normalizePhone(g("telefono")),
+      correo: "No informado",
+      ci: "No informado",
+      departamento: state.department,
+      ciudad: state.city,
+      direccion: g("direccion"),
+      referencia: refParts.join(" | "),
+      ubicacion_maps: g("ubicacion") || "No informado",
+      direccion_escrita: g("direccion").slice(0, 500),
+      direccion_detectada: String(location.direccionDetectada || "").slice(0, 500),
+      latitude: point ? Number(point.lat.toFixed(7)) : null,
+      longitude: point ? Number(point.lng.toFixed(7)) : null,
+      gps_accuracy: location.accuracy == null ? null : Number(location.accuracy),
+      barrio: String(location.barrio || "").slice(0, 180),
+      neighborhood: String(location.barrio || "").slice(0, 180),
+      ciudad_detectada: String(location.city || "").slice(0, 180),
+      departamento_detectado: String(location.department || "").slice(0, 180),
+      codigo_postal: String(location.postcode || "").slice(0, 32),
+      zona_entrega: detectedZone.code,
+      forma_pago_entrega: detectedZone.formaPago,
+      ubicacion_origen: location.origin || "",
+      maps_url: point ? mapsUrl(point.lat, point.lng) : "",
+      estado: "Pendiente",
+      origen: CFG.origin,
+      created_at: new Date().toISOString(),
+      observaciones: obs.join(" | "),
+      ip: "No informado",
+      user_agent: String(navigator.userAgent).slice(0, 400),
+      utm_source: TRACKING.utm_source,
+      utm_medium: TRACKING.utm_medium,
+      utm_campaign: TRACKING.utm_campaign,
+      fbclid: TRACKING.fbclid,
+      gclid: TRACKING.gclid,
+      landing_url: landingUrl(),
+      meta_fbp: cookieValue("_fbp") || null,
+      meta_fbc: cookieValue("_fbc") || (TRACKING.fbclid ? "fb.1." + Date.now() + "." + TRACKING.fbclid : null),
+      combo: c.label,
+      tipo_entrega: d.type,
+      transportadora: d.carrierNeeded ? state.carrier : "",
+      requiere_pago_anticipado: !!d.carrierNeeded,
+      costo_envio: t.shipping,
+      total_pagar: t.total,
+    };
+  }
+
+  function saveOrder(order) {
+    if (CFG.useEdgeFunction) {
+      return fetch(CFG.edgeFunctionUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(order),
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) throw new Error(j.error || "No se pudo registrar el pedido.");
+          return j;
+        });
+      });
+    }
+    return fetch(CFG.supabaseUrl + "/rest/v1/" + CFG.supabaseTable, {
+      method: "POST",
+      headers: {
+        apikey: CFG.supabaseAnonKey,
+        Authorization: "Bearer " + CFG.supabaseAnonKey,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(order),
+    }).then(function (r) {
+      if (!r.ok) return r.text().then(function (txt) { throw new Error(txt || ("HTTP " + r.status)); });
+      return {};
+    });
+  }
+
+  function submitOrder(e) {
+    e.preventDefault();
+    if (state.submitting) return;
+
+    // Honeypot anti-bot: si está completo, simulamos éxito sin guardar nada.
+    if ($("#f-website").value) { closeCheckout(); return; }
+
+    var errBox = $("#formError");
+    errBox.hidden = true;
+
+    if (!validateAll()) {
+      errBox.hidden = false;
+      errBox.textContent = "Revisá los campos marcados en rojo para continuar.";
+      return;
+    }
+
+    var order = buildOrder();
+    var key = dedupeKey(order);
+    if (isDuplicate(key)) {
+      errBox.hidden = false;
+      errBox.textContent = "Ya registramos este pedido hace unos minutos. Si querés hacer otro, escribinos por WhatsApp.";
+      return;
+    }
+
+    var btn = $("#submitBtn");
+    state.submitting = true;
+    btn.disabled = true;
+    btn.classList.add("loading");
+    $(".btn-text", btn).textContent = "Registrando pedido…";
+
+    saveOrder(order).then(function () {
+      rememberOrder(key);
+      state.lastOrder = order;
+      state.submitting = false;
+      btn.disabled = false;
+      btn.classList.remove("loading");
+
+      // El pedido creado es un Lead. Purchase se envía por CAPI únicamente cuando el panel lo marca como pagado.
+      track("generate_lead", "Lead", {
+        transaction_id: order.id,
+        value: order.total_pagar,
+        currency: CFG.currency,
+        num_items: order.cantidad,
+        items: itemPayload(state.combo),
+        combo: order.combo,
+        method: "checkout",
+        event_id: order.id + ":lead",
+      });
+
+      showSuccess(order);
+    }).catch(function (err) {
+      console.error("[order]", err);
+      state.submitting = false;
+      btn.disabled = false;
+      btn.classList.remove("loading");
+      $(".btn-text", btn).innerHTML = 'Confirmar mi pedido · <span id="submitPrice">' + fmt(totals().total) + "</span>";
+      errBox.hidden = false;
+      errBox.textContent = "No pudimos registrar tu pedido. Revisá tu conexión e intentá de nuevo, o escribinos por WhatsApp.";
+      toast("No se pudo enviar el pedido");
+    });
+  }
+
+  function showSuccess(order) {
+    var d = deliveryInfo();
+    $("#checkoutForm").hidden = true;
+    $("#checkoutSuccess").hidden = false;
+    $("#okOrderId").textContent = order.id;
+    $("#okImage").src = comboImage(state.combo);
+    $("#okProduct").textContent = CFG.shortName + " · " + order.combo;
+    $("#okTotal").textContent = fmt(order.total_pagar);
+    $("#okCustomer").textContent = order.nombre;
+    $("#okCity").textContent = order.ciudad;
+    $("#okAddress").textContent = order.direccion;
+    $("#okDelivery").textContent = order.tipo_entrega + (order.transportadora ? " (" + order.transportadora + ")" : "");
+    $("#okPayment").textContent = order.requiere_pago_anticipado ? "Pago anticipado" : "Pago contra entrega";
+    $("#okEta").textContent = d.eta;
+    $("#okStep3").lastChild.textContent = order.requiere_pago_anticipado
+      ? " Pagás por adelantado y despachamos por " + order.transportadora
+      : " Recibís el producto y pagás al recibir";
+    $("#okPrepay").hidden = !order.requiere_pago_anticipado;
+    $("#okPayAmount").textContent = fmt(order.total_pagar);
+    $("#okPrepayIntro").textContent =
+      "Como tu pedido va por " + (order.transportadora || "transportadora") +
+      ", necesitamos el pago antes de despacharlo. Podés transferir o depositar a esta cuenta:";
+
+    var paymentLabel = order.requiere_pago_anticipado ? "Pago anticipado" : "Pago contra entrega";
+    var msg = "Hola, quiero confirmar esta compra:\n\n" +
+      "*PEDIDO " + order.id + "*\n" +
+      "Cliente: " + order.nombre + "\n" +
+      "WhatsApp: " + order.telefono + "\n" +
+      "Producto: " + CFG.shortName + "\n" +
+      "Combo: " + order.combo + "\n" +
+      "Total: " + fmt(order.total_pagar) + "\n" +
+      "Envío: " + (order.costo_envio === 0 ? "GRATIS" : fmt(order.costo_envio)) + "\n" +
+      "Entrega prevista: " + d.eta + "\n" +
+      "Modalidad: " + order.tipo_entrega + (order.transportadora ? " (" + order.transportadora + ")" : "") + "\n" +
+      "Pago: " + paymentLabel + "\n" +
+      "Dirección: " + order.direccion + "\n" +
+      "Barrio: " + order.barrio + "\n" +
+      "Ciudad: " + order.ciudad + " (" + order.departamento + ")";
+    if (order.ubicacion_maps && order.ubicacion_maps !== "No informado") {
+      msg += "\nUbicación: " + order.ubicacion_maps;
+    }
+    if (order.requiere_pago_anticipado) {
+      msg += "\n\nQuiero coordinar el pago anticipado y enviar el comprobante.";
+    }
+    $("#okWhats").href = "https://wa.me/" + CFG.whatsapp + "?text=" + encodeURIComponent(msg);
+    $("#okWhatsappNumber").textContent = "+" + String(CFG.whatsapp).replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, "$1 $2 $3 $4");
+
+    $(".modal-card").scrollTop = 0;
+  }
+
+  /* ---------------- Scroll depth 50% / 90% ---------------- */
+  function initScrollDepth() {
+    var fired = { 50: false, 90: false };
+    var ticking = false;
+    function check() {
+      ticking = false;
+      var doc = document.documentElement;
+      var max = doc.scrollHeight - window.innerHeight;
+      if (max <= 0) return;
+      var pct = (window.scrollY / max) * 100;
+      [50, 90].forEach(function (mark) {
+        if (!fired[mark] && pct >= mark) {
+          fired[mark] = true;
+          track("scroll", "", { percent_scrolled: mark, page_location: window.location.href });
+        }
+      });
+      if (fired[50] && fired[90]) window.removeEventListener("scroll", onScroll);
+    }
+    function onScroll() {
+      if (!ticking) { ticking = true; requestAnimationFrame(check); }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+  }
+
+  /* ---------------- Canonical / OG dinámicos ---------------- */
+  function fixUrls() {
+    // Permite publicar en cualquier ruta de GitHub Pages sin tocar el HTML.
+    var base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
+    var canonical = CFG.siteUrl || base;
+    if (CFG.siteUrl && window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1" && window.location.protocol !== "file:") {
+      canonical = base;
+    }
+    var c = $("#canonicalLink"); if (c) c.href = canonical;
+    var u = $("#ogUrl"); if (u) u.content = canonical;
+    var oi = $("#ogImage"); if (oi) oi.content = canonical + "img/og.jpg";
+    var tw = document.querySelector('meta[name="twitter:image"]');
+    if (tw) tw.content = canonical + "img/og.jpg";
+
+    // Datos estructurados Product, armados desde config.js
+    var ld = $("#ldProduct");
+    if (ld) {
+      var precios = COMBOS.map(function (c) { return c.price; });
+      ld.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: CFG.name,
+        sku: CFG.sku,
+        brand: { "@type": "Brand", name: CFG.brand },
+        category: CFG.category,
+        description: (document.querySelector('meta[name="description"]') || {}).content || "",
+        url: canonical,
+        image: (window.HERO_SLIDES || []).map(function (s) { return canonical + s.src; }),
+        offers: {
+          "@type": "AggregateOffer",
+          priceCurrency: CFG.currency,
+          lowPrice: Math.min.apply(null, precios),
+          highPrice: Math.max.apply(null, precios),
+          offerCount: COMBOS.length,
+          availability: "https://schema.org/InStock",
+          areaServed: "PY",
+          url: canonical,
+        },
+      });
+    }
+  }
+
+  /* ---------------- Motor de contenido (contenido.js) ---------------- */
+
+  /** Lee "hero.titulo" dentro de CONTENIDO. Devuelve "" si no existe. */
+  function txt(path) {
+    var v = path.split(".").reduce(function (o, k) {
+      return o && o[k] !== undefined ? o[k] : undefined;
+    }, TXT);
+    return v === undefined || v === null ? "" : v;
+  }
+
+  /** Oculta la sección entera si su bloque de contenido es null. */
+  function toggleSection(id, on) {
+    var el = $(id);
+    if (el) el.hidden = !on;
+  }
+
+  function renderContenido() {
+    // Textos sueltos marcados con data-txt="ruta.del.texto"
+    $$("[data-txt]").forEach(function (el) {
+      var v = txt(el.dataset.txt);
+      if (/<[a-z][\s\S]*>/i.test(v)) el.innerHTML = v;
+      else el.textContent = v;
+    });
+
+    // Menú
+    var nav = $("#siteNav");
+    if (nav) {
+      nav.innerHTML = (txt("menu") || []).map(function (m) {
+        return '<a href="' + esc(m.ancla) + '">' + esc(m.texto) + "</a>";
+      }).join("");
+    }
+
+    // Beneficios del encabezado
+    var hb = $("#heroBenefits");
+    if (hb) {
+      hb.innerHTML = (txt("hero.beneficios") || []).map(function (b) {
+        return "<li><span aria-hidden=\"true\">" + esc(b.icono || "✓") + "</span> " + esc(b.texto) + "</li>";
+      }).join("");
+    }
+
+    // Tira de confianza
+    var ts = $("#trustStrip");
+    if (ts) {
+      ts.innerHTML = (txt("confianza") || []).map(function (c) {
+        return "<div><span aria-hidden=\"true\">" + esc(c.icono) + "</span><b>" +
+          esc(c.titulo) + "</b><small>" + esc(c.detalle) + "</small></div>";
+      }).join("");
+    }
+
+    // Sección explicativa
+    var sl = $("#storyList");
+    if (sl) {
+      sl.innerHTML = (txt("explicacion.puntos") || []).map(function (p) {
+        return "<li>" + p + "</li>";
+      }).join("");
+    }
+    var sn = $("#storyNote");
+    if (sn) { sn.innerHTML = txt("explicacion.aclaracion"); sn.hidden = !txt("explicacion.aclaracion"); }
+    // Bloque de venta visual (se desactiva poniendo ventaVisual: null)
+    var sList = $("#salesList");
+    if (sList) {
+      var piezas = (TXT.ventaVisual ? window.SALES_STACK : null) || [];
+      sList.innerHTML = piezas.map(function (p) {
+        var img = '<picture>' +
+          '<source media="(max-width: 700px)" srcset="' + esc(p.srcSmall || p.src) + '">' +
+          '<img src="' + esc(p.src) + '" width="' + (p.w || 1024) + '" height="' + (p.h || 1024) +
+          '" loading="lazy" decoding="async" alt="' + esc(p.alt || "") + '">' +
+          "</picture>";
+        // Con checkout: true la pieza entera funciona como botón de compra.
+        return p.checkout === false
+          ? '<div class="sales-item">' + img + "</div>"
+          : '<button type="button" class="sales-item is-clickable" data-checkout="venta_visual" aria-label="' +
+            esc(p.alt || "Comprar " + CFG.shortName) + '">' + img + "</button>";
+      }).join("");
+      toggleSection("#ventaVisual", piezas.length > 0);
+    }
+
+    // Características
+    var sg = $("#specGrid");
+    if (sg) {
+      var specs = txt("caracteristicas.items") || [];
+      sg.innerHTML = specs.map(function (s) {
+        return "<div class=\"spec\"><span aria-hidden=\"true\">" + esc(s.icono) + "</span><b>" +
+          esc(s.titulo) + "</b><small>" + esc(s.detalle) + "</small></div>";
+      }).join("");
+      toggleSection("#specsSection", specs.length > 0);
+    }
+
+    // Modo de uso (se puede desactivar poniendo modoUso: null)
+    var usa = !!TXT.modoUso;
+    toggleSection("#howtoSection", usa);
+    if (usa) {
+      $("#howtoSteps").innerHTML = (txt("modoUso.pasos") || []).map(function (p, i) {
+        return "<li><span class=\"step-n\">" + (i + 1) + "</span><div><b>" + esc(p.titulo) +
+          "</b><p>" + esc(p.detalle) + "</p></div></li>";
+      }).join("");
+      var hn = $("#howtoNote");
+      hn.innerHTML = txt("modoUso.aclaracion");
+      hn.hidden = !txt("modoUso.aclaracion");
+    }
+
+    // Entrega y pago
+    var dg = $("#deliveryGrid");
+    if (dg) {
+      dg.innerHTML = (txt("entrega.tarjetas") || []).map(function (t) {
+        return '<article class="delivery-card"><span class="dc-icon" aria-hidden="true">' +
+          esc(t.icono) + "</span><h3>" + esc(t.titulo) + "</h3><p>" + t.texto +
+          "</p><small>" + esc(t.nota) + "</small></article>";
+      }).join("");
+    }
+
+    // Preguntas frecuentes
+    var fl = $("#faqList");
+    if (fl) {
+      fl.innerHTML = (txt("faq.items") || []).map(function (f) {
+        return "<details><summary>" + esc(f.p) + "</summary><div><p>" + f.r + "</p></div></details>";
+      }).join("");
+    }
+
+    // Aviso legal (se puede desactivar poniendo avisoLegal: null)
+    var legal = txt("avisoLegal");
+    toggleSection("#legalSection", !!legal);
+    if (legal) $("#legalText").innerHTML = legal;
+
+    // Modal de procedencia y respaldo
+    var tp = $("#trustPoints");
+    if (tp) {
+      tp.innerHTML = (txt("respaldo.puntos") || []).map(function (p) {
+        return "<li><span aria-hidden=\"true\">" + esc(p.icono) + "</span><p>" + p.texto + "</p></li>";
+      }).join("");
+    }
+    var tl = $("#trustLegal");
+    if (tl) {
+      tl.innerHTML = (txt("respaldo.legal") || []).map(function (p) { return "<p>" + p + "</p>"; }).join("");
+    }
+
+    // Textos que dependen de los precios
+    var minimo = Math.min.apply(null, COMBOS.map(function (c) { return c.price; }));
+    var fp = $("#finalPrice");
+    if (fp) fp.innerHTML = "Desde <b>" + fmt(minimo) + "</b> · Envío sin costo a todo el país";
+    var pref = $("#comboCtaPrefix");
+    if (pref) pref.textContent = txt("combos.botonPrefijo") || "Comprar";
+
+    // WhatsApp del pie con el número de config.js
+    var wf = $("#waFooter");
+    if (wf) wf.textContent = "+" + String(CFG.whatsapp).replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, "$1 $2 $3 $4");
+
+    // Etiqueta noscript de GTM
+    var ns = $("#gtmNoscript");
+    if (ns && CFG.gtmId) {
+      ns.innerHTML = '<iframe src="https://www.googletagmanager.com/ns.html?id=' + esc(CFG.gtmId) +
+        '" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe>';
+    }
+
+    // Color de marca desde config.js
+    if (CFG.theme) {
+      var root = document.documentElement;
+      Object.keys(CFG.theme).forEach(function (k) {
+        root.style.setProperty("--" + k, CFG.theme[k]);
+      });
+    }
+  }
+
+  /* ---------------- Inicio ---------------- */
+  function init() {
+    renderContenido();
+    fixUrls();
+    $("#year").textContent = new Date().getFullYear();
+
+    renderAnnounce();
+    carousel.init();
+    renderCombos();
+    renderMiniCombos();
+    renderGallery();
+    fillDepartments();
+    renderCarriers();
+    renderPaymentInfo();
+    paintCommercialDates();
+    paintCombo();
+
+    // Aperturas del checkout
+    $$("[data-checkout]").forEach(function (b) {
+      b.addEventListener("click", function () { openCheckout(b.dataset.checkout); });
+    });
+    $$("[data-close-checkout]").forEach(function (b) {
+      b.addEventListener("click", closeCheckout);
+    });
+
+    // Modal de procedencia y respaldo
+    $("#openTrust").addEventListener("click", openTrust);
+    $$("[data-close-trust]").forEach(function (b) {
+      b.addEventListener("click", closeTrust);
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape") return;
+      if (!$("#trustModal").hidden) closeTrust();
+      else if (state.checkoutOpen) closeCheckout();
+    });
+
+    initInlineLocationPicker();
+
+    // Departamento / ciudad
+    $("#f-departamento").addEventListener("change", function () {
+      state.department = this.value;
+      state.city = "";
+      state.carrier = "";
+      fillCities(this.value);
+      $('.field[data-field="ciudadOtra"]').hidden = true;
+      $("#f-ciudad-otra").value = "";
+      clearError("departamento");
+      validateField("departamento");
+      paintDelivery();
+    });
+
+    $("#f-ciudad").addEventListener("change", function () {
+      var otra = $('.field[data-field="ciudadOtra"]');
+      if (this.value === "__otra") {
+        otra.hidden = false;
+        state.city = $("#f-ciudad-otra").value.trim();
+        setTimeout(function () { $("#f-ciudad-otra").focus({ preventScroll: true }); }, 60);
+      } else {
+        otra.hidden = true;
+        $("#f-ciudad-otra").value = "";
+        state.city = this.value;
+      }
+      state.carrier = "";
+      clearError("ciudad");
+      if (this.value) markOk("ciudad");
+      paintDelivery();
+    });
+
+    $("#f-ciudad-otra").addEventListener("input", function () {
+      state.city = this.value.trim();
+      if (this.value.trim().length >= 3) { clearError("ciudadOtra"); markOk("ciudadOtra"); }
+      paintDelivery();
+    });
+
+    $("#f-prepay").addEventListener("change", function () {
+      state.prepayAccepted = this.checked;
+      if (this.checked) clearError("prepay");
+    });
+
+    // Validación en vivo
+    ["nombre", "telefono", "direccion"].forEach(function (n) {
+      var w = $('.field[data-field="' + n + '"]');
+      var input = w.querySelector("input,textarea");
+      input.addEventListener("blur", function () { if (input.value.trim()) validateField(n); });
+      input.addEventListener("input", function () {
+        if (w.classList.contains("err")) validateField(n, true) && clearError(n);
+      });
+    });
+
+    $("#orderForm").addEventListener("submit", submitOrder);
+
+    // WhatsApp: evento Lead
+    $$("#waHero, #waFloat, #waFinal, #waFooter, #okWhats").forEach(function (a) {
+      a.addEventListener("click", function () {
+        track("generate_lead", "Lead", {
+          value: totals().total, currency: CFG.currency,
+          items: itemPayload(state.combo), method: "whatsapp",
+        });
+      });
+    });
+
+    refreshWaLinks();
+    initScrollDepth();
+
+    // ViewContent / view_item al cargar
+    track("view_item", "ViewContent", {
+      value: state.combo.price, currency: CFG.currency, items: itemPayload(state.combo),
+    });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
